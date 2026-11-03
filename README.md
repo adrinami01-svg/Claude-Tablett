@@ -7,7 +7,12 @@ Eine kleine App (PWA), mit der du deinen **Mein Hub** (Claude-Artifact) mit eine
 - **Terminplan**: Wochenleiste mit Punkten pro Tag, Liste für den gewählten Tag, „Danach (nächste 30 Tage)“ und Countdown bis zur nächsten Prüfung.
 - **Alle Termine**: eintragen (auch wöchentlich wiederholt), löschen mit Rückgängig, Import aus `.json` (Hub) oder `.ics` (Kalender), Sicherung als `.json`, Export als `.ics` mit Erinnerung 1 Tag vor Prüfungen.
 - **Schnellnotiz**: speichert automatisch, mit einem Tipp in die Obsidian-Inbox.
-- **Lern-Timer** 25/5 Minuten mit Ton und Vibration.
+- **Lern-Timer** 25/5 Minuten mit Ton und Vibration, zählt Lerneinheiten pro Tag/Woche.
+- **Lernkarten** (Karteikasten mit 5 Fächern) mit über 50 Pflege-Fachbegriffen, eigene Stapel, viele Karten auf einmal einfügen; „Lernkarte des Tages“ auf der Übersicht.
+- **Noten**: Noten pro Fach/CE mit Gewichtung, Durchschnitt pro Fach und gesamt.
+- **Wetter** für heute und morgen (Open-Meteo, ohne Anmeldung) mit Schirm-Hinweis.
+- **Gewohnheiten** zum Abhaken mit 7-Tage-Verlauf und Serie 🔥.
+- **Komplett-Sicherung** aller Daten in eine Datei und Wiederherstellen.
 - **Schnellzugriff-Kacheln**: Obsidian (Vault & Inbox), Gmail, Kalender, Claude – frei anpassbar (Bearbeiten → hinzufügen, verschieben, entfernen).
 - **Auto-Start** (optional, in den Einstellungen): öffnet beim Start nach 2 Sekunden direkt den Hub, mit „Abbrechen“.
 - **App-Shortcuts** (Android): lange auf das App-Symbol drücken → Hub, Obsidian oder Gmail direkt.

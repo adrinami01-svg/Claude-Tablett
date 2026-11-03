@@ -107,6 +107,29 @@ textarea{min-height:120px;resize:vertical;display:block}
 nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 0;overflow-x:auto;scrollbar-width:none}
 nav.tabs button{background:transparent;border:none;border-bottom:3px solid transparent;border-radius:0;color:var(--muted);padding:10px 14px;white-space:nowrap}
 nav.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+.wx{display:flex;align-items:center;gap:14px}
+.wx .big{font-size:40px;line-height:1}
+.wx .tmp{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums}
+.wx2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.wx2 div{background:var(--bg);border-radius:10px;padding:8px 10px;font-size:14px}
+.hab{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.hab:first-of-type{border-top:none}
+.hab input{width:24px;height:24px;accent-color:var(--accent)}
+.hab label{cursor:pointer}
+.week7{display:flex;gap:3px}
+.week7 i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.week7 i.on{background:var(--accent)}
+.streak{font-size:12px;color:var(--warn);font-weight:600;min-width:42px;text-align:right}
+.fc{border:1px solid var(--line);border-radius:16px;padding:22px 18px;background:var(--bg);text-align:center;min-height:180px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.fc .q{font-size:28px;font-weight:700;overflow-wrap:anywhere}
+.fc .a{font-size:18px;overflow-wrap:anywhere}
+.fc .meta{font-size:12px;color:var(--muted)}
+.boxes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:12px 0}
+.boxes div{background:var(--bg);border-radius:10px;padding:6px;text-align:center;font-size:12px;color:var(--muted)}
+.boxes b{display:block;font-size:18px;color:var(--ink)}
+.avg{font-size:40px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+details summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6px 0}
+.cardrow{display:grid;grid-template-columns:1fr auto;gap:8px;padding:6px 0;border-top:1px solid var(--line);align-items:center;font-size:14px}
 [hidden]{display:none!important}
 @media (max-width:760px){.top,.cols{grid-template-columns:1fr}}
 @media (max-width:520px){h1{font-size:24px}.clock{font-size:34px}.grid{grid-template-columns:1fr 1fr}.row{grid-template-columns:64px 1fr auto}}
@@ -133,6 +156,8 @@ nav.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(
   <nav class="tabs" role="tablist" aria-label="Bereiche">
     <button type="button" role="tab" data-tab="start">Übersicht</button>
     <button type="button" role="tab" data-tab="termine">Alle Termine</button>
+    <button type="button" role="tab" data-tab="lernen">Lernkarten</button>
+    <button type="button" role="tab" data-tab="noten">Noten</button>
     <button type="button" role="tab" data-tab="einst">Einstellungen</button>
   </nav>
 
@@ -147,6 +172,14 @@ nav.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(
       </div>
     </div>
     <div class="col">
+      <div class="card" id="wxCard">
+        <h2>Wetter <small id="wxPlace"></small></h2>
+        <div id="wxBody"></div>
+      </div>
+      <div class="card">
+        <h2>Gewohnheiten <small id="habInfo"></small></h2>
+        <div id="habList"></div>
+      </div>
       <div class="card">
         <h2>Schnellnotiz <small>speichert automatisch</small></h2>
         <textarea id="note" aria-label="Schnellnotiz" placeholder="Ideen, Fragen, Einkäufe …"></textarea>
@@ -163,6 +196,13 @@ nav.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(
           <button type="button" class="sm ghost" data-min="5" aria-pressed="false">5 Min Pause</button>
         </div>
         <div class="timer"><div class="clockbig" id="tClock">25:00</div><button type="button" id="tGo">Start</button><button type="button" class="ghost" id="tReset">Zurücksetzen</button></div>
+        <p class="hint" id="pomoStats"></p>
+      </div>
+      <div class="card">
+        <h2>Lernkarte des Tages</h2>
+        <div class="what" id="dailyQ" style="font-size:20px"></div>
+        <div class="sub" id="dailyA"></div>
+        <div class="bar"><button type="button" class="ghost sm" id="dailyShow">Erklärung zeigen</button><button type="button" class="ghost sm" id="dailyGo">Zu den Lernkarten</button></div>
       </div>
     </div>
   </section>
@@ -200,6 +240,71 @@ nav.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(
     </div>
   </section>
 
+  <!-- Lernkarten -->
+  <section id="tab-lernen" hidden>
+    <div class="cols">
+      <div class="col"><div class="card">
+        <h2>Lernen <small id="fcInfo"></small></h2>
+        <div class="fc" id="fc"></div>
+        <div class="bar" id="fcBtns"></div>
+        <div class="boxes" id="fcBoxes" aria-label="Karteikasten-Fächer"></div>
+        <p class="hint" style="margin-top:0">Gewusst → Karte rückt ein Fach weiter und kommt seltener (1, 3, 7, 14 Tage). Nicht gewusst → zurück in Fach 1.</p>
+      </div></div>
+      <div class="col">
+        <div class="card">
+          <h2>Karte hinzufügen</h2>
+          <form id="fcForm">
+            <label class="f" style="flex-basis:100%">Begriff / Frage<input type="text" id="fcQ" required></label>
+            <label class="f" style="flex-basis:100%">Erklärung / Antwort<input type="text" id="fcA" required></label>
+            <label class="f">Stapel<input type="text" id="fcDeck" list="fcDecks" placeholder="z. B. CE 10 Asthma"></label>
+            <datalist id="fcDecks"></datalist>
+            <button type="submit" style="align-self:flex-end">Hinzufügen</button>
+          </form>
+          <details style="margin-top:10px"><summary>Viele Karten auf einmal einfügen</summary>
+            <p class="hint">Eine Karte pro Zeile: <b>Begriff ; Erklärung</b> (auch Tab oder „ - “ als Trenner).</p>
+            <textarea id="fcBulk" placeholder="Dyspnoe ; Atemnot"></textarea>
+            <div class="bar"><button type="button" id="fcBulkBtn">Einfügen</button></div>
+          </details>
+        </div>
+        <div class="card">
+          <h2>Stapel <small id="fcCount"></small></h2>
+          <label class="f" style="margin-bottom:8px">Nur diesen Stapel lernen<select id="fcFilter"></select></label>
+          <details><summary>Alle Karten anzeigen</summary><div id="fcList"></div></details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Noten -->
+  <section id="tab-noten" hidden>
+    <div class="cols">
+      <div class="col"><div class="card">
+        <h2>Meine Noten <small id="grCount"></small></h2>
+        <div id="grList"></div>
+      </div></div>
+      <div class="col">
+        <div class="card">
+          <h2>Gesamtschnitt</h2>
+          <div class="avg" id="grAvg">–</div>
+          <div class="sub" id="grAvgSub">gewichteter Durchschnitt aller Noten</div>
+        </div>
+        <div class="card">
+          <h2>Note eintragen</h2>
+          <form id="grForm">
+            <label class="f" style="flex-basis:100%">Fach / CE<input type="text" id="grFach" list="grFaecher" required placeholder="z. B. CE 07"></label>
+            <datalist id="grFaecher"></datalist>
+            <label class="f">Art<select id="grArt"><option value="Schulaufgabe" data-w="2">Schulaufgabe</option><option value="Kurzarbeit" data-w="1">Kurzarbeit</option><option value="FPP" data-w="2">FPP</option><option value="Mündlich" data-w="1">Mündlich</option><option value="Praxis" data-w="1">Praxis</option><option value="Sonstiges" data-w="1">Sonstiges</option></select></label>
+            <label class="f" style="flex:0 1 100px">Note<input type="text" id="grNote" inputmode="decimal" required placeholder="2,3"></label>
+            <label class="f" style="flex:0 1 100px">Gewicht<input type="text" id="grW" inputmode="decimal" value="2"></label>
+            <label class="f" style="flex-basis:100%">Thema (optional)<input type="text" id="grThema" placeholder="z. B. LS 4Eb"></label>
+            <button type="submit">Eintragen</button>
+          </form>
+          <p class="hint">Gewicht = wie stark die Note zählt (Standard: Schulaufgabe/FPP 2, sonst 1). Passe es an die Regeln deiner Schule an.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Einstellungen -->
   <section id="tab-einst" hidden>
     <div class="cols">
@@ -225,6 +330,26 @@ nav.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(
         <p class="hint" id="installHint"></p>
         <div class="bar"><button type="button" id="installBtn" hidden>Als App installieren</button>
         <button type="button" class="danger" id="resetBtn">Kacheln &amp; Einstellungen zurücksetzen</button></div>
+      </div>
+      <div class="card">
+        <h2>Wetter-Ort</h2>
+        <form id="wxForm">
+          <label class="f">Stadt<input type="text" id="wxCity" placeholder="z. B. Neumarkt in der Oberpfalz"></label>
+          <button type="submit" style="align-self:flex-end">Suchen</button>
+          <button type="button" class="ghost" id="wxGeo" style="align-self:flex-end">Meinen Standort nutzen</button>
+        </form>
+        <p class="hint">Wetterdaten von Open-Meteo, ohne Anmeldung.</p>
+      </div>
+      <div class="card">
+        <h2>Gewohnheiten anpassen</h2>
+        <div id="habEdit"></div>
+        <form id="habForm" style="margin-top:8px"><label class="f">Neue Gewohnheit<input type="text" id="habNew" required placeholder="z. B. 10 Min lesen"></label><button type="submit" style="align-self:flex-end">Hinzufügen</button></form>
+      </div>
+      <div class="card">
+        <h2>Komplett-Sicherung</h2>
+        <p class="hint" style="margin:0 0 10px">Sichert alles (Termine, Lernkarten, Noten, Gewohnheiten, Notiz, Kacheln) in einer Datei – z. B. für ein neues Gerät.</p>
+        <div class="bar" style="margin:0"><button type="button" id="bkExp">Alles sichern</button><button type="button" class="ghost" id="bkImp">Sicherung wiederherstellen</button></div>
+        <input type="file" id="bkFile" accept=".json,application/json" hidden>
       </div></div>
     </div>
   </section>
@@ -530,6 +655,7 @@ function tTick(){
   document.title = tInt ? fmt(tLeft) + " · Mein Hub" : "Mein Hub";
   if (tLeft <= 0) { tStop(); document.title = "Mein Hub"; tLeft = tMode; tClock.textContent = fmt(tMode);
     try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch (e) {}
+    if (tMode >= 1500) pomoDone(tMode / 60);
     beep(); toast(tMode >= 1500 ? "Lernzeit vorbei – Pause machen!" : "Pause vorbei – weiter geht’s!"); }
 }
 function beep(){ try { var c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain();
@@ -546,8 +672,275 @@ Array.prototype.forEach.call(document.querySelectorAll("[data-min]"), function(b
   });
 });
 
+/* ---------- Lern-Statistik ---------- */
+var PSTORE = "hub-launcher-pomo", P = read(PSTORE, {});
+function pomoDone(min){
+  var k = iso(today()); P[k] = (P[k] || 0) + 1; write(PSTORE, P);
+  var h = H.done[k] || (H.done[k] = {}); if (H.list.some(function(x){ return x.id === "lernen"; })) { h.lernen = true; saveH(); renderHabits(); }
+  renderPomo();
+}
+function renderPomo(){
+  var t0 = today(), k = iso(t0), week = 0;
+  for (var i = 0; i < 7; i++) week += P[iso(addDays(t0, -i))] || 0;
+  var n = P[k] || 0;
+  document.getElementById("timerInfo").textContent = n ? "heute " + n + "×" : "";
+  document.getElementById("pomoStats").textContent = "Heute: " + n + " Einheit" + (n === 1 ? "" : "en") + " (" + n * 25 + " Min) · letzte 7 Tage: " + week + " (" + Math.round(week * 25 / 6) / 10 + " Std)";
+}
+
+/* ---------- Gewohnheiten ---------- */
+var HSTORE = "hub-launcher-gewohnheiten";
+var H = Object.assign({ list: [
+  { id: "trinken", t: "Genug getrunken" }, { id: "bewegung", t: "Bewegung gehabt" },
+  { id: "lernen", t: "25 Minuten gelernt" }, { id: "wecker", t: "Wecker für morgen gestellt" } ], done: {} }, read(HSTORE, {}));
+function saveH(){ write(HSTORE, H); }
+function streak(id){
+  var t0 = today(), n = 0, i = H.done[iso(t0)] && H.done[iso(t0)][id] ? 0 : 1; // heute noch offen zählt nicht als Abbruch
+  for (; i < 400; i++) { var d = H.done[iso(addDays(t0, -i))]; if (d && d[id]) n++; else break; }
+  return n;
+}
+function renderHabits(){
+  var t0 = today(), k = iso(t0), day = H.done[k] || {}, box = document.getElementById("habList"); box.textContent = "";
+  var done = 0;
+  H.list.forEach(function(hb){
+    var r = el("div", "hab"), cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "hb-" + hb.id; cb.checked = !!day[hb.id];
+    if (cb.checked) done++;
+    cb.addEventListener("change", function(){ var d = H.done[k] || (H.done[k] = {}); d[hb.id] = cb.checked; saveH(); renderHabits(); });
+    var lb = el("label", null, hb.t); lb.htmlFor = cb.id;
+    var right = el("div"); right.style.display = "flex"; right.style.gap = "8px"; right.style.alignItems = "center";
+    var w7 = el("div", "week7"); w7.setAttribute("aria-hidden", "true");
+    for (var i = 6; i >= 0; i--) { var d = H.done[iso(addDays(t0, -i))]; w7.appendChild(el("i", d && d[hb.id] ? "on" : "")); }
+    var s = streak(hb.id); var st = el("span", "streak", s >= 2 ? "🔥 " + s : ""); if (s >= 2) st.setAttribute("aria-label", s + " Tage in Folge");
+    right.appendChild(w7); right.appendChild(st);
+    r.appendChild(cb); r.appendChild(lb); r.appendChild(right); box.appendChild(r);
+  });
+  if (!H.list.length) box.appendChild(el("div", "empty", "Keine Gewohnheiten – in den Einstellungen hinzufügen."));
+  document.getElementById("habInfo").textContent = H.list.length ? done + " von " + H.list.length : "";
+  var ed = document.getElementById("habEdit"); ed.textContent = "";
+  H.list.forEach(function(hb, i){
+    var r = el("div", "cardrow"); r.appendChild(el("span", null, hb.t));
+    var b = el("button", "danger sm", "Entfernen"); b.type = "button"; b.setAttribute("aria-label", "Gewohnheit entfernen: " + hb.t);
+    b.addEventListener("click", function(){ H.list.splice(i, 1); saveH(); renderHabits(); }); r.appendChild(b); ed.appendChild(r);
+  });
+}
+document.getElementById("habForm").addEventListener("submit", function(e){
+  e.preventDefault(); var v = document.getElementById("habNew").value.trim(); if (!v) return;
+  H.list.push({ id: newId(), t: v }); saveH(); document.getElementById("habNew").value = ""; renderHabits();
+});
+
+/* ---------- Lernkarten (Karteikasten) ---------- */
+var FSTORE = "hub-launcher-karten", INTERVAL = [0, 0, 1, 3, 7, 14];
+var BASE = [["Dyspnoe","Atemnot, erschwerte Atmung"],["Orthopnoe","starke Atemnot im Liegen, Besserung durch aufrechte Haltung"],["Apnoe","Atemstillstand"],["Tachykardie","Herzfrequenz über 100 pro Minute in Ruhe"],["Bradykardie","Herzfrequenz unter 60 pro Minute in Ruhe"],["Arrhythmie","Herzrhythmusstörung"],["Hypertonie","Bluthochdruck"],["Hypotonie","zu niedriger Blutdruck"],["Zyanose","bläuliche Verfärbung von Haut/Schleimhäuten bei Sauerstoffmangel"],["Hypoxie","Sauerstoffmangel im Gewebe"],["Ödem","Wasseransammlung im Gewebe"],["Thrombose","Blutgerinnsel in einem Gefäß"],["Hämatom","Bluterguss"],["Antikoagulation","Hemmung der Blutgerinnung (z. B. durch Medikamente)"],["Apoplex","Schlaganfall"],["Myokardinfarkt","Herzinfarkt"],["Angina pectoris","anfallsartiger Brustschmerz durch Sauerstoffmangel des Herzmuskels"],["Hemiparese","Halbseitenschwäche (unvollständige Lähmung einer Körperhälfte)"],["Hemiplegie","vollständige Halbseitenlähmung"],["Aphasie","Sprachstörung nach Hirnschädigung"],["Dysphagie","Schluckstörung"],["Aspiration","Eindringen von Flüssigkeit oder Speise in die Atemwege"],["Pneumonie","Lungenentzündung"],["Asthma bronchiale","chronisch-entzündliche Atemwegserkrankung mit anfallsweiser Atemnot"],["Dekubitus","Druckgeschwür durch anhaltenden Druck auf Haut und Gewebe"],["Kontraktur","dauerhafte Bewegungseinschränkung eines Gelenks"],["Intertrigo","Hautentzündung in Hautfalten"],["Soor","Pilzinfektion (Candida) der Schleimhaut, z. B. im Mund"],["Parotitis","Entzündung der Ohrspeicheldrüse"],["Pruritus","Juckreiz"],["Obstipation","Verstopfung"],["Diarrhö","Durchfall"],["Emesis","Erbrechen"],["Inkontinenz","Unfähigkeit, Harn oder Stuhl kontrolliert zurückzuhalten"],["Diurese","Harnausscheidung"],["Anurie","fehlende oder sehr geringe Harnausscheidung (unter ca. 100 ml/Tag)"],["Oligurie","verminderte Harnausscheidung (unter ca. 500 ml/Tag)"],["Polyurie","krankhaft vermehrte Harnausscheidung"],["Nykturie","vermehrtes nächtliches Wasserlassen"],["Niereninsuffizienz","eingeschränkte Nierenfunktion"],["Diuretikum","harntreibendes Medikament"],["Antipyretikum","fiebersenkendes Mittel"],["Analgesie","Schmerzlinderung bzw. Schmerzausschaltung"],["Hypoglykämie","zu niedriger Blutzucker"],["Hyperglykämie","erhöhter Blutzucker"],["Exsikkose","Austrocknung durch Flüssigkeitsmangel"],["Kachexie","starke Abmagerung, Auszehrung"],["Sepsis","lebensbedrohliche Organfunktionsstörung durch eine fehlregulierte Reaktion auf eine Infektion"],["Somnolenz","krankhafte Schläfrigkeit, leicht erweckbar"],["Sopor","schlafähnlicher Zustand, nur durch starke Reize kurz erweckbar"],["Koma","tiefe Bewusstlosigkeit, nicht erweckbar"],["Anamnese","Erhebung der Krankengeschichte"],["Prophylaxe","vorbeugende Maßnahme"],["Vitalzeichen","Puls, Blutdruck, Atmung, Temperatur und Bewusstsein"]];
+var F = read(FSTORE, null);
+if (!F) { F = BASE.map(function(p, i){ return { id: "b" + i, q: p[0], a: p[1], deck: "Fachbegriffe", box: 1, next: "" }; }); write(FSTORE, F); }
+function saveF(){ write(FSTORE, F); }
+var fcCur = null, fcShown = false, fcExtra = false, fcFilter = "";
+function fcPool(){ return F.filter(function(c){ return !fcFilter || c.deck === fcFilter; }); }
+function fcDue(){ var k = iso(today()); return fcPool().filter(function(c){ return !c.next || c.next <= k; }); }
+function fcPick(){
+  var due = fcDue(), pool = due.length ? due : (fcExtra ? fcPool() : []);
+  if (!pool.length) { fcCur = null; return; }
+  var cand = pool.length > 1 && fcCur ? pool.filter(function(c){ return c !== fcCur; }) : pool;
+  cand.sort(function(a, b){ return a.box - b.box; });
+  var low = cand.filter(function(c){ return c.box === cand[0].box; });
+  fcCur = low[Math.floor(Math.random() * low.length)]; fcShown = false;
+}
+function fcAnswer(ok){
+  if (!fcCur) return;
+  fcCur.box = ok ? Math.min(5, fcCur.box + 1) : 1;
+  fcCur.next = ok ? iso(addDays(today(), INTERVAL[fcCur.box])) : "";
+  saveF(); fcPick(); renderFC(); renderDaily();
+}
+function btn(txt, cls, fn){ var b = el("button", cls || "", txt); b.type = "button"; b.addEventListener("click", fn); return b; }
+function renderFC(){
+  if (fcCur && F.indexOf(fcCur) < 0) fcCur = null;
+  if (!fcCur) fcPick();
+  var box = document.getElementById("fc"), bt = document.getElementById("fcBtns"); box.textContent = ""; bt.textContent = "";
+  var due = fcDue().length;
+  document.getElementById("fcInfo").textContent = due + " fällig";
+  if (!fcCur) {
+    box.appendChild(el("div", "q", "🎉 Alles gelernt"));
+    box.appendChild(el("div", "meta", fcPool().length ? "Für heute sind keine Karten mehr fällig." : "Keine Karten in diesem Stapel."));
+    if (fcPool().length) bt.appendChild(btn("Trotzdem weiter üben", "ghost", function(){ fcExtra = true; fcPick(); renderFC(); }));
+  } else {
+    box.appendChild(el("div", "meta", (fcCur.deck || "Allgemein") + " · Fach " + fcCur.box));
+    box.appendChild(el("div", "q", fcCur.q));
+    if (fcShown) box.appendChild(el("div", "a", fcCur.a));
+    if (!fcShown) bt.appendChild(btn("Aufdecken", "", function(){ fcShown = true; renderFC(); }));
+    else { bt.appendChild(btn("✓ Gewusst", "", function(){ fcAnswer(true); })); bt.appendChild(btn("✗ Nicht gewusst", "ghost", function(){ fcAnswer(false); })); }
+  }
+  var bx = document.getElementById("fcBoxes"); bx.textContent = "";
+  for (var i = 1; i <= 5; i++) { var d = el("div"); d.appendChild(el("b", null, String(fcPool().filter(function(c){ return c.box === i; }).length))); d.appendChild(document.createTextNode("Fach " + i)); bx.appendChild(d); }
+  // Stapel & Liste
+  var decks = []; F.forEach(function(c){ var d = c.deck || "Allgemein"; if (decks.indexOf(d) < 0) decks.push(d); });
+  var sel = document.getElementById("fcFilter"); sel.textContent = "";
+  [["", "Alle Stapel (" + F.length + ")"]].concat(decks.map(function(d){ return [d, d + " (" + F.filter(function(c){ return (c.deck || "Allgemein") === d; }).length + ")"]; }))
+    .forEach(function(p){ var o = document.createElement("option"); o.value = p[0]; o.textContent = p[1]; sel.appendChild(o); });
+  sel.value = fcFilter;
+  var dl = document.getElementById("fcDecks"); dl.textContent = ""; decks.forEach(function(d){ var o = document.createElement("option"); o.value = d; dl.appendChild(o); });
+  document.getElementById("fcCount").textContent = F.length + " Karten";
+  var list = document.getElementById("fcList"); list.textContent = "";
+  fcPool().slice().sort(function(a, b){ return a.q.localeCompare(b.q, "de"); }).forEach(function(c){
+    var r = el("div", "cardrow"), t = el("div"); t.appendChild(el("b", null, c.q)); t.appendChild(el("div", "sub", c.a)); r.appendChild(t);
+    r.appendChild(btn("Löschen", "ghost sm", function(){ var i = F.indexOf(c); F.splice(i, 1); saveF(); renderFC();
+      toast("Karte gelöscht.", "Rückgängig", function(){ F.splice(i, 0, c); saveF(); renderFC(); }); }));
+    list.appendChild(r);
+  });
+}
+document.getElementById("fcFilter").addEventListener("change", function(e){ fcFilter = e.target.value; fcExtra = false; fcCur = null; renderFC(); });
+document.getElementById("fcForm").addEventListener("submit", function(e){
+  e.preventDefault(); var q = document.getElementById("fcQ"), a = document.getElementById("fcA"), d = document.getElementById("fcDeck");
+  if (!q.value.trim() || !a.value.trim()) return;
+  F.push({ id: newId(), q: q.value.trim(), a: a.value.trim(), deck: d.value.trim() || "Allgemein", box: 1, next: "" });
+  saveF(); q.value = a.value = ""; q.focus(); renderFC(); toast("Karte hinzugefügt.");
+});
+document.getElementById("fcBulkBtn").addEventListener("click", function(){
+  var ta = document.getElementById("fcBulk"), deck = document.getElementById("fcDeck").value.trim() || "Allgemein", n = 0;
+  ta.value.split(/\r?\n/).forEach(function(l){
+    var m = l.split(/\s*;\s*|\t|\s+[-–]\s+/); if (m.length < 2 || !m[0].trim()) return;
+    F.push({ id: newId(), q: m[0].trim(), a: m.slice(1).join(" – ").trim(), deck: deck, box: 1, next: "" }); n++;
+  });
+  saveF(); ta.value = ""; renderFC(); toast(n + " Karten eingefügt (Stapel „" + deck + "“).");
+});
+var dailyCard = null;
+function renderDaily(){
+  if (!F.length) { document.getElementById("dailyQ").textContent = "Keine Karten"; document.getElementById("dailyA").textContent = ""; return; }
+  var idx = Math.floor(today().getTime() / 86400000) % F.length; dailyCard = F[(idx + F.length) % F.length];
+  document.getElementById("dailyQ").textContent = dailyCard.q;
+  document.getElementById("dailyA").textContent = ""; document.getElementById("dailyShow").hidden = false;
+}
+document.getElementById("dailyShow").addEventListener("click", function(){ if (dailyCard) { document.getElementById("dailyA").textContent = dailyCard.a; this.hidden = true; } });
+document.getElementById("dailyGo").addEventListener("click", function(){ location.hash = "lernen"; });
+
+/* ---------- Noten ---------- */
+var GSTORE = "hub-launcher-noten", G = read(GSTORE, []);
+function saveG(){ write(GSTORE, G); }
+function num(s){ return parseFloat(String(s).replace(",", ".")); }
+function fmtN(n){ return n.toFixed(2).replace(".", ","); }
+function wavg(list){ var s = 0, w = 0; list.forEach(function(g){ s += g.note * g.w; w += g.w; }); return w ? s / w : null; }
+function renderGrades(){
+  var list = document.getElementById("grList"); list.textContent = "";
+  var faecher = []; G.forEach(function(g){ if (faecher.indexOf(g.fach) < 0) faecher.push(g.fach); });
+  faecher.sort(function(a, b){ return a.localeCompare(b, "de", { numeric: true }); });
+  document.getElementById("grCount").textContent = G.length + " Noten";
+  if (!G.length) list.appendChild(el("div", "empty", "Noch keine Noten. Rechts eintragen, sobald du eine zurückbekommst."));
+  faecher.forEach(function(f){
+    var gs = G.filter(function(g){ return g.fach === f; }), a = wavg(gs);
+    var h = el("div", "grp"); h.textContent = f + " · Ø " + fmtN(a); list.appendChild(h);
+    gs.forEach(function(g){
+      var r = el("div", "row"); r.appendChild(el("span", "when", g.d ? short(parse(g.d)) : ""));
+      var w = el("div"); w.appendChild(el("div", "what", g.art + (g.thema ? " – " + g.thema : ""))); w.appendChild(el("div", "sub", "Gewicht " + String(g.w).replace(".", ","))); r.appendChild(w);
+      var side = el("div"); side.style.display = "flex"; side.style.gap = "6px"; side.style.alignItems = "center";
+      side.appendChild(el("span", "chip " + (g.note >= 4.5 ? "crit" : g.note >= 3.5 ? "warn" : ""), String(g.note).replace(".", ",")));
+      side.appendChild(btn("Löschen", "ghost sm", function(){ var i = G.indexOf(g); G.splice(i, 1); saveG(); renderGrades();
+        toast("Note gelöscht.", "Rückgängig", function(){ G.splice(i, 0, g); saveG(); renderGrades(); }); }));
+      r.appendChild(side); list.appendChild(r);
+    });
+  });
+  var all = wavg(G);
+  document.getElementById("grAvg").textContent = all == null ? "–" : fmtN(all);
+  document.getElementById("grAvgSub").textContent = all == null ? "gewichteter Durchschnitt aller Noten" : "gewichteter Durchschnitt aus " + G.length + " Noten in " + faecher.length + " Fächern";
+  var dl = document.getElementById("grFaecher"); dl.textContent = ""; faecher.forEach(function(f){ var o = document.createElement("option"); o.value = f; dl.appendChild(o); });
+}
+document.getElementById("grArt").addEventListener("change", function(e){ document.getElementById("grW").value = e.target.selectedOptions[0].dataset.w; });
+document.getElementById("grForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var n = num(document.getElementById("grNote").value), w = num(document.getElementById("grW").value);
+  if (isNaN(n) || n < 1 || n > 6) return toast("Bitte eine Note zwischen 1 und 6 eingeben.");
+  if (isNaN(w) || w <= 0) w = 1;
+  G.push({ id: newId(), fach: document.getElementById("grFach").value.trim(), art: document.getElementById("grArt").value, note: n, w: w,
+    thema: document.getElementById("grThema").value.trim(), d: iso(today()) });
+  saveG(); document.getElementById("grNote").value = ""; document.getElementById("grThema").value = ""; renderGrades(); toast("Note eingetragen.");
+});
+
+/* ---------- Wetter (Open-Meteo) ---------- */
+var WSTORE = "hub-launcher-wetter", W = read(WSTORE, {});
+function saveW(){ write(WSTORE, W); }
+var WMO = { 0: ["☀️", "Klar"], 1: ["🌤️", "Überwiegend klar"], 2: ["⛅", "Teils bewölkt"], 3: ["☁️", "Bedeckt"], 45: ["🌫️", "Nebel"], 48: ["🌫️", "Reifnebel"],
+  51: ["🌦️", "Leichter Niesel"], 53: ["🌦️", "Niesel"], 55: ["🌧️", "Starker Niesel"], 56: ["🌧️", "Gefrierender Niesel"], 57: ["🌧️", "Gefrierender Niesel"],
+  61: ["🌦️", "Leichter Regen"], 63: ["🌧️", "Regen"], 65: ["🌧️", "Starker Regen"], 66: ["🌧️", "Gefrierender Regen"], 67: ["🌧️", "Gefrierender Regen"],
+  71: ["🌨️", "Leichter Schnee"], 73: ["🌨️", "Schnee"], 75: ["❄️", "Starker Schnee"], 77: ["🌨️", "Schneegriesel"],
+  80: ["🌦️", "Regenschauer"], 81: ["🌧️", "Regenschauer"], 82: ["⛈️", "Heftige Schauer"], 85: ["🌨️", "Schneeschauer"], 86: ["🌨️", "Schneeschauer"],
+  95: ["⛈️", "Gewitter"], 96: ["⛈️", "Gewitter mit Hagel"], 99: ["⛈️", "Gewitter mit Hagel"] };
+function wmo(c){ return WMO[c] || ["🌡️", "–"]; }
+function wxFetch(force){
+  if (W.lat == null) return;
+  if (!force && W.data && Date.now() - W.at < 30 * 60000) return;
+  var u = "https://api.open-meteo.com/v1/forecast?latitude=" + W.lat + "&longitude=" + W.lon +
+    "&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=2";
+  fetch(u).then(function(r){ return r.json(); }).then(function(j){ if (!j.daily) return; W.data = j; W.at = Date.now(); saveW(); renderWx(); }).catch(function(){});
+}
+function renderWx(){
+  var b = document.getElementById("wxBody"); b.textContent = "";
+  document.getElementById("wxPlace").textContent = W.name || "";
+  if (W.lat == null) {
+    b.appendChild(el("div", "empty", "Noch kein Ort festgelegt."));
+    b.appendChild(btn("Ort festlegen", "ghost sm", function(){ location.hash = "einst"; setTimeout(function(){ document.getElementById("wxCity").focus(); }, 50); }));
+    return;
+  }
+  var j = W.data; if (!j || !j.daily) { b.appendChild(el("div", "empty", "Wetter wird geladen …")); return; }
+  var dd = j.daily, now = wmo(j.current ? j.current.weather_code : dd.weather_code[0]);
+  var top = el("div", "wx"); top.appendChild(el("div", "big", now[0]));
+  var t = el("div"); t.appendChild(el("div", "tmp", j.current ? Math.round(j.current.temperature_2m) + "°" : ""));
+  t.appendChild(el("div", "sub", now[1])); top.appendChild(t); b.appendChild(top);
+  var two = el("div", "wx2");
+  ["Heute", "Morgen"].forEach(function(lbl, i){
+    if (dd.time[i] == null) return;
+    var c = el("div"), w = wmo(dd.weather_code[i]);
+    c.appendChild(el("b", null, lbl + " " + w[0]));
+    c.appendChild(el("div", null, Math.round(dd.temperature_2m_min[i]) + "° / " + Math.round(dd.temperature_2m_max[i]) + "°"));
+    var p = dd.precipitation_probability_max ? dd.precipitation_probability_max[i] : null;
+    c.appendChild(el("div", "sub", p == null ? w[1] : "Regen " + p + " %" + (p >= 50 ? " – Schirm mitnehmen ☂️" : "")));
+    two.appendChild(c);
+  });
+  b.appendChild(two);
+  if (W.at) b.appendChild(el("p", "hint", "Stand " + new Date(W.at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })));
+}
+document.getElementById("wxForm").addEventListener("submit", function(e){
+  e.preventDefault(); var q = document.getElementById("wxCity").value.trim(); if (!q) return;
+  fetch("https://geocoding-api.open-meteo.com/v1/search?count=1&language=de&name=" + encodeURIComponent(q)).then(function(r){ return r.json(); }).then(function(j){
+    var p = j.results && j.results[0]; if (!p) return toast("Ort nicht gefunden.");
+    W = { lat: p.latitude, lon: p.longitude, name: p.name }; saveW(); renderWx(); wxFetch(true); toast("Wetter-Ort: " + p.name);
+  }).catch(function(){ toast("Keine Verbindung."); });
+});
+document.getElementById("wxGeo").addEventListener("click", function(){
+  if (!navigator.geolocation) return toast("Standort nicht verfügbar.");
+  navigator.geolocation.getCurrentPosition(function(pos){
+    W = { lat: Math.round(pos.coords.latitude * 100) / 100, lon: Math.round(pos.coords.longitude * 100) / 100, name: "Mein Standort" }; saveW(); renderWx(); wxFetch(true); toast("Standort übernommen.");
+  }, function(){ toast("Standort wurde nicht freigegeben."); }, { timeout: 10000 });
+});
+setInterval(function(){ wxFetch(false); }, 10 * 60000);
+document.addEventListener("visibilitychange", function(){ if (!document.hidden) wxFetch(false); });
+
+/* ---------- Komplett-Sicherung ---------- */
+document.getElementById("bkExp").addEventListener("click", function(){
+  var data = { app: "mein-hub", version: 1, erstellt: new Date().toISOString(), einstellungen: S, termine: T, notiz: note.value,
+    karten: F, noten: G, gewohnheiten: H, lerneinheiten: P };
+  download("mein-hub-sicherung-" + iso(today()) + ".json", JSON.stringify(data, null, 1), "application/json");
+});
+document.getElementById("bkImp").addEventListener("click", function(){ document.getElementById("bkFile").click(); });
+document.getElementById("bkFile").addEventListener("change", function(ev){
+  var f = ev.target.files[0]; if (!f) return; var r = new FileReader();
+  r.onload = function(){
+    ev.target.value = "";
+    try {
+      var j = JSON.parse(String(r.result));
+      if (j.app !== "mein-hub") return toast("Das ist keine Komplett-Sicherung dieser App.");
+      if (!confirm("Alle Daten auf diesem Gerät durch die Sicherung vom " + String(j.erstellt).slice(0, 10) + " ersetzen?")) return;
+      if (j.einstellungen) { S = Object.assign(defaults(), j.einstellungen); save(); }
+      if (j.termine) { T = j.termine; saveT(); }
+      if (typeof j.notiz === "string") { note.value = j.notiz; write(NSTORE, j.notiz); }
+      if (j.karten) { F = j.karten; saveF(); fcCur = null; }
+      if (j.noten) { G = j.noten; saveG(); }
+      if (j.gewohnheiten) { H = j.gewohnheiten; saveH(); }
+      if (j.lerneinheiten) { P = j.lerneinheiten; write(PSTORE, P); }
+      renderAll(); fillSettings(); toast("Sicherung wiederhergestellt.");
+    } catch (e) { toast("Datei konnte nicht gelesen werden."); }
+  };
+  r.readAsText(f);
+});
+
 /* ---------- Tabs ---------- */
-var TABS = ["start", "termine", "einst"];
+var TABS = ["start", "termine", "lernen", "noten", "einst"];
 function showTab(name){
   if (TABS.indexOf(name) < 0) name = "start";
   TABS.forEach(function(t){ document.getElementById("tab-" + t).hidden = t !== name; });
@@ -617,9 +1010,10 @@ document.getElementById("installHint").textContent = standalone
     : "Installieren: Im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen.";
 
 /* ---------- Start ---------- */
-function renderAll(){ tick(); renderCount(); renderTiles(); renderWeek(); renderAllList(); }
+function renderAll(){ tick(); renderCount(); renderTiles(); renderWeek(); renderAllList(); renderHabits(); renderPomo(); renderDaily(); renderFC(); renderGrades(); renderWx(); }
 renderAll();
 showTab(location.hash.slice(1));
+wxFetch(false);
 (function startup(){
   var q = new URLSearchParams(location.search), target = q.get("go");
   if (target) {
