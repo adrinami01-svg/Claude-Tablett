@@ -15,7 +15,7 @@ Kacheln und Einstellungen werden pro Gerät im Browser gespeichert.
 
 ## Installieren
 1. **GitHub Pages einschalten**: Repo → *Settings → Pages → Source: „GitHub Actions“*. Danach veröffentlicht der Workflow die App bei jedem Push auf `main` unter
-   `https://adrinami01-svg.github.io/claude-tablett/`.
+   `https://adrinami01-svg.github.io/Claude-Tablett/`.
 2. Die Adresse auf dem Tablet öffnen:
    - **iPad (Safari)**: Teilen → „Zum Home-Bildschirm“.
    - **Android (Chrome)**: Menü → „App installieren“ (oder Button „Als App installieren“ in der App).
