@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mein Hub</title>
+<meta name="description" content="Schnellzugriff auf meinen Hub und meine wichtigsten Seiten.">
+<meta name="theme-color" content="#0E7C86">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hub">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+:root{
+  --bg:#F3F5F4;--surface:#FFFFFF;--ink:#18262B;--muted:#5C6B70;--line:#DDE3E2;
+  --accent:#0E7C86;--accent-ink:#FFFFFF;--accent-soft:#DCEFF0;--obs:#6B4FBB;--obs-soft:#ECE6F8;--crit:#B3261E;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0F1A1D;--surface:#17262A;--ink:#E7EFEE;--muted:#93A6AA;--line:#2A3C41;
+  --accent:#4FC3CC;--accent-ink:#0F1A1D;--accent-soft:#16363B;--obs:#B7A1F2;--obs-soft:#2B2442;--crit:#F2877F;color-scheme:dark}}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:8px}
+.wrap{max-width:960px;margin:0 auto;padding:28px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.date{color:var(--muted);font-size:14px}
+h1{font-size:30px;font-weight:700;line-height:1.15}
+.clock{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.hero{display:flex;align-items:center;gap:18px;text-decoration:none;background:var(--accent);color:var(--accent-ink);
+  border-radius:20px;padding:24px 22px;margin-bottom:16px;min-height:110px;touch-action:manipulation}
+.hero:active{transform:scale(.99)}
+.hero .ic{font-size:40px;line-height:1}
+.hero b{display:block;font-size:24px}
+.hero span{opacity:.85;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.tile{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:118px;padding:16px;
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;text-decoration:none;color:var(--ink);touch-action:manipulation}
+.tile:active{transform:scale(.98)}
+.tile .ic{font-size:30px;line-height:1}
+.tile b{font-size:17px;overflow-wrap:anywhere}
+.tile small{display:block;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.tile .key{position:absolute;top:10px;right:12px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tile.obs{background:var(--obs-soft);border-color:var(--obs)}
+.edit .tile{border-style:dashed}
+.tools{display:flex;gap:6px;margin-top:4px}
+.tools button{padding:6px 10px;font-size:13px}
+button{font:inherit;font-weight:600;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
+  border-radius:10px;padding:10px 16px;touch-action:manipulation;min-height:44px}
+button.ghost{background:transparent;color:var(--accent)}
+button.danger{border-color:var(--crit);color:var(--crit);background:transparent}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:16px}
+.panel h2{font-size:17px;margin-bottom:10px}
+form{display:flex;flex-wrap:wrap;gap:8px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);flex:1 1 200px}
+input[type=text],input[type=url]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
+.check{display:flex;gap:10px;align-items:center;font-size:15px;margin-top:10px}
+.check input{width:22px;height:22px;accent-color:var(--accent)}
+.hint{color:var(--muted);font-size:13px;margin-top:10px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);
+  border-radius:14px;padding:12px 16px;display:flex;gap:14px;align-items:center;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
+.toast button{min-height:36px;padding:6px 12px;background:var(--bg);color:var(--ink);border-color:var(--bg)}
+[hidden]{display:none!important}
+@media (max-width:520px){h1{font-size:24px}.clock{font-size:34px}.grid{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;transform:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><div class="date" id="date"></div><h1 id="greet">Hallo</h1></div>
+    <div class="clock" id="clock" aria-hidden="true">--:--</div>
+  </header>
+
+  <a class="hero" id="hero" target="_blank" rel="noopener">
+    <div class="ic" aria-hidden="true">🏠</div>
+    <div><b>Mein Hub öffnen</b><span>Heute, Aufgaben, Termine, Notizen</span></div>
+  </a>
+
+  <div class="grid" id="grid" aria-label="Schnellzugriffe"></div>
+
+  <div class="bar">
+    <button type="button" class="ghost" id="editBtn" aria-pressed="false">Bearbeiten</button>
+    <button type="button" class="ghost" id="setBtn" aria-expanded="false">Einstellungen</button>
+    <button type="button" id="installBtn" hidden>Als App installieren</button>
+  </div>
+
+  <section class="panel" id="addPanel" hidden>
+    <h2>Neuer Schnellzugriff</h2>
+    <form id="addForm">
+      <label class="f">Name<input type="text" id="addName" required placeholder="z. B. Stundenplan"></label>
+      <label class="f">Adresse<input type="text" id="addUrl" required placeholder="https://… oder obsidian://…"></label>
+      <label class="f" style="flex:0 1 90px">Symbol<input type="text" id="addIcon" maxlength="4" placeholder="⭐"></label>
+      <button type="submit" style="align-self:flex-end">Hinzufügen</button>
+    </form>
+  </section>
+
+  <section class="panel" id="setPanel" hidden>
+    <h2>Einstellungen</h2>
+    <form id="setForm">
+      <label class="f" style="flex-basis:100%">Adresse deines Hubs<input type="url" id="hubUrl" required></label>
+      <label class="f">Obsidian-Vault<input type="text" id="vault" required></label>
+      <label class="f">Dein Name<input type="text" id="name"></label>
+      <button type="submit" style="align-self:flex-end">Speichern</button>
+    </form>
+    <label class="check"><input type="checkbox" id="auto"> Beim Start den Hub automatisch öffnen</label>
+    <p class="hint" id="installHint"></p>
+    <button type="button" class="danger" id="resetBtn" style="margin-top:12px">Auf Standard zurücksetzen</button>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button type="button" id="toastBtn">Abbrechen</button></div>
+
+<script>
+"use strict";
+var DEFAULT_HUB = "https://claude.ai/artifact/T1BkfiURb5EtKMgHc2HBst#no_universal_links";
+var STORE = "hub-launcher-v1";
+
+function defaults(){
+  return {
+    hub: DEFAULT_HUB, vault: "SecondBrain", name: "Adrian", auto: false,
+    tiles: [
+      { key: "obsidian", t: "Obsidian", s: "Vault öffnen", i: "🟣", u: "obsidian:vault" },
+      { key: "inbox", t: "Obsidian Inbox", s: "00 Inbox/Inbox", i: "📥", u: "obsidian:00 Inbox/Inbox" },
+      { key: "gmail", t: "Gmail", s: "Posteingang", i: "✉️", u: "https://mail.google.com/" },
+      { key: "kalender", t: "Kalender", s: "Google Kalender", i: "📅", u: "https://calendar.google.com/" },
+      { key: "claude", t: "Claude", s: "Neuer Chat", i: "✳️", u: "https://claude.ai/new" }
+    ]
+  };
+}
+function load(){
+  try { var s = JSON.parse(localStorage.getItem(STORE)); if (s && s.tiles) return Object.assign(defaults(), s); } catch (e) {}
+  return defaults();
+}
+var S = load();
+function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
+
+/* Obsidian-Kurzform "obsidian:<Datei>" in echte Links umwandeln */
+function resolve(u){
+  if (u.indexOf("obsidian:") === 0 && u.indexOf("obsidian://") !== 0) {
+    var f = u.slice(9);
+    return "obsidian://open?vault=" + encodeURIComponent(S.vault) + (f && f !== "vault" ? "&file=" + encodeURIComponent(f) : "");
+  }
+  return u;
+}
+function isWeb(u){ return /^https?:\/\//i.test(u); }
+function go(u){ u = resolve(u); if (isWeb(u)) { var w = window.open(u, "_blank"); if (w) w.opener = null; else location.href = u; } else location.href = u; }
+function el(tag, cls, txt){ var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+
+/* ---------- Kopfzeile ---------- */
+var WD = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+var MON = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+function tick(){
+  var d = new Date(), h = d.getHours();
+  document.getElementById("clock").textContent = String(h).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+  document.getElementById("date").textContent = WD[d.getDay()] + ", " + d.getDate() + ". " + MON[d.getMonth()];
+  document.getElementById("greet").textContent = (h < 11 ? "Guten Morgen" : h < 18 ? "Guten Tag" : "Guten Abend") + (S.name ? ", " + S.name : "");
+}
+setInterval(tick, 15000);
+
+/* ---------- Kacheln ---------- */
+var editing = false;
+var grid = document.getElementById("grid");
+function render(){
+  tick();
+  var hero = document.getElementById("hero"); hero.href = S.hub;
+  grid.textContent = "";
+  grid.classList.toggle("edit", editing);
+  S.tiles.forEach(function(t, i){
+    var href = resolve(t.u);
+    var a = el("a", "tile" + (href.indexOf("obsidian://") === 0 ? " obs" : ""));
+    a.href = href;
+    if (isWeb(href)) { a.target = "_blank"; a.rel = "noopener"; }
+    a.appendChild(el("div", "ic", t.i || "🔗"));
+    var tx = el("div"); tx.appendChild(el("b", null, t.t)); if (t.s) tx.appendChild(el("small", null, t.s)); a.appendChild(tx);
+    if (i < 9) a.appendChild(el("span", "key", String(i + 1)));
+    if (editing) {
+      a.addEventListener("click", function(e){ e.preventDefault(); });
+      var tools = el("div", "tools");
+      [["←", -1, "Nach vorne: "], ["→", 1, "Nach hinten: "]].forEach(function(p){
+        var b = el("button", "ghost", p[0]); b.type = "button"; b.setAttribute("aria-label", p[2] + t.t);
+        b.disabled = (p[1] < 0 && i === 0) || (p[1] > 0 && i === S.tiles.length - 1);
+        b.addEventListener("click", function(){ var j = i + p[1]; var x = S.tiles[i]; S.tiles[i] = S.tiles[j]; S.tiles[j] = x; save(); render(); });
+        tools.appendChild(b);
+      });
+      var del = el("button", "danger", "✕"); del.type = "button"; del.setAttribute("aria-label", "Entfernen: " + t.t);
+      del.addEventListener("click", function(){ S.tiles.splice(i, 1); save(); render(); });
+      tools.appendChild(del); a.appendChild(tools);
+    }
+    grid.appendChild(a);
+  });
+}
+
+/* ---------- Bearbeiten & Einstellungen ---------- */
+var editBtn = document.getElementById("editBtn"), setBtn = document.getElementById("setBtn");
+editBtn.addEventListener("click", function(){
+  editing = !editing; editBtn.setAttribute("aria-pressed", editing); editBtn.textContent = editing ? "Fertig" : "Bearbeiten";
+  document.getElementById("addPanel").hidden = !editing; render();
+});
+document.getElementById("addForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var n = document.getElementById("addName"), u = document.getElementById("addUrl"), ic = document.getElementById("addIcon");
+  var url = u.value.trim(); if (!url) return;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = "https://" + url;
+  S.tiles.push({ key: "k" + Date.now().toString(36), t: n.value.trim() || url, s: "", i: ic.value.trim() || "🔗", u: url });
+  n.value = u.value = ic.value = ""; save(); render();
+});
+setBtn.addEventListener("click", function(){
+  var p = document.getElementById("setPanel"); p.hidden = !p.hidden; setBtn.setAttribute("aria-expanded", !p.hidden);
+  document.getElementById("hubUrl").value = S.hub; document.getElementById("vault").value = S.vault;
+  document.getElementById("name").value = S.name; document.getElementById("auto").checked = !!S.auto;
+});
+document.getElementById("setForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  S.hub = document.getElementById("hubUrl").value.trim() || DEFAULT_HUB;
+  S.vault = document.getElementById("vault").value.trim() || "SecondBrain";
+  S.name = document.getElementById("name").value.trim();
+  save(); render(); toast("Gespeichert.");
+});
+document.getElementById("auto").addEventListener("change", function(e){ S.auto = e.target.checked; save(); });
+document.getElementById("resetBtn").addEventListener("click", function(){
+  if (confirm("Alle Kacheln und Einstellungen auf Standard zurücksetzen?")) { S = defaults(); save(); render(); document.getElementById("setPanel").hidden = true; }
+});
+
+/* ---------- Hinweis-Leiste ---------- */
+var toastTimer = null, toastAction = null;
+function toast(msg, btnText, onBtn){
+  var t = document.getElementById("toast"); document.getElementById("toastText").textContent = msg;
+  var b = document.getElementById("toastBtn"); b.hidden = !btnText; b.textContent = btnText || ""; toastAction = onBtn || null;
+  t.hidden = false; clearTimeout(toastTimer); if (!btnText) toastTimer = setTimeout(function(){ t.hidden = true; }, 1800);
+}
+document.getElementById("toastBtn").addEventListener("click", function(){ if (toastAction) toastAction(); document.getElementById("toast").hidden = true; });
+
+/* ---------- Tastatur: 0 = Hub, 1–9 = Kacheln ---------- */
+document.addEventListener("keydown", function(e){
+  if (e.ctrlKey || e.metaKey || e.altKey || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  if (e.key === "0") { go(S.hub); return; }
+  var n = parseInt(e.key, 10); if (n >= 1 && n <= 9 && S.tiles[n - 1]) go(S.tiles[n - 1].u);
+});
+
+/* ---------- Installation ---------- */
+var deferred = null, installBtn = document.getElementById("installBtn");
+var standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); deferred = e; installBtn.hidden = false; });
+installBtn.addEventListener("click", function(){ if (!deferred) return; deferred.prompt(); deferred.userChoice.finally(function(){ deferred = null; installBtn.hidden = true; }); });
+document.getElementById("installHint").textContent = standalone
+  ? "Läuft als installierte App. Tipp: Lange auf das App-Symbol drücken öffnet Hub, Obsidian oder Gmail direkt (Android)."
+  : /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) && "ontouchend" in document
+    ? "Auf iPad/iPhone installieren: In Safari auf „Teilen“ tippen, dann „Zum Home-Bildschirm“."
+    : "Installieren: Im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen.";
+
+/* ---------- Start ---------- */
+render();
+(function startup(){
+  var q = new URLSearchParams(location.search), target = q.get("go");
+  if (target) {
+    history.replaceState(null, "", location.pathname);
+    if (target === "hub") { go(S.hub); return; }
+    var t = S.tiles.filter(function(x){ return x.key === target; })[0]; if (t) { go(t.u); return; }
+  }
+  if (S.auto) {
+    var left = 2, timer = setInterval(function(){
+      left--; if (left <= 0) { clearInterval(timer); document.getElementById("toast").hidden = true; go(S.hub); }
+      else document.getElementById("toastText").textContent = "Hub öffnet in " + left + " s …";
+    }, 1000);
+    toast("Hub öffnet in " + left + " s …", "Abbrechen", function(){ clearInterval(timer); });
+  }
+})();
+
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  navigator.serviceWorker.register("sw.js").catch(function(){});
+}
+</script>
+</body>
+</html>
