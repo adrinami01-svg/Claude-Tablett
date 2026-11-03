@@ -4,6 +4,10 @@ Eine kleine App (PWA), mit der du deinen **Mein Hub** (Claude-Artifact) mit eine
 
 ## Was sie kann
 - **Großer „Mein Hub öffnen“-Button** – ein Tipp, und der Hub ist da.
+- **Terminplan**: Wochenleiste mit Punkten pro Tag, Liste für den gewählten Tag, „Danach (nächste 30 Tage)“ und Countdown bis zur nächsten Prüfung.
+- **Alle Termine**: eintragen (auch wöchentlich wiederholt), löschen mit Rückgängig, Import aus `.json` (Hub) oder `.ics` (Kalender), Sicherung als `.json`, Export als `.ics` mit Erinnerung 1 Tag vor Prüfungen.
+- **Schnellnotiz**: speichert automatisch, mit einem Tipp in die Obsidian-Inbox.
+- **Lern-Timer** 25/5 Minuten mit Ton und Vibration.
 - **Schnellzugriff-Kacheln**: Obsidian (Vault & Inbox), Gmail, Kalender, Claude – frei anpassbar (Bearbeiten → hinzufügen, verschieben, entfernen).
 - **Auto-Start** (optional, in den Einstellungen): öffnet beim Start nach 2 Sekunden direkt den Hub, mit „Abbrechen“.
 - **App-Shortcuts** (Android): lange auf das App-Symbol drücken → Hub, Obsidian oder Gmail direkt.
@@ -11,7 +15,7 @@ Eine kleine App (PWA), mit der du deinen **Mein Hub** (Claude-Artifact) mit eine
 - **Offline**: die Startseite lädt auch ohne Netz.
 - Hell/Dunkel automatisch, große Touch-Flächen.
 
-Kacheln und Einstellungen werden pro Gerät im Browser gespeichert.
+Kacheln, Termine und Notiz werden **nur auf dem Gerät** gespeichert – nichts davon landet im Repo.
 
 ## Installieren
 1. **GitHub Pages einschalten**: Repo → *Settings → Pages → Source: „GitHub Actions“*. Danach veröffentlicht der Workflow die App bei jedem Push auf `main` unter

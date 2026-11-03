@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mein Hub</title>
-<meta name="description" content="Schnellzugriff auf meinen Hub und meine wichtigsten Seiten.">
+<meta name="description" content="Schnellzugriff auf meinen Hub, meine Termine und wichtigsten Seiten.">
 <meta name="theme-color" content="#0E7C86">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -16,59 +16,100 @@
 <style>
 :root{
   --bg:#F3F5F4;--surface:#FFFFFF;--ink:#18262B;--muted:#5C6B70;--line:#DDE3E2;
-  --accent:#0E7C86;--accent-ink:#FFFFFF;--accent-soft:#DCEFF0;--obs:#6B4FBB;--obs-soft:#ECE6F8;--crit:#B3261E;
+  --accent:#0E7C86;--accent-ink:#FFFFFF;--accent-soft:#DCEFF0;--obs:#6B4FBB;--obs-soft:#ECE6F8;
+  --crit:#B3261E;--crit-soft:#F8DEDB;--warn:#B7650A;--warn-soft:#FBEBD5;
   --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#0F1A1D;--surface:#17262A;--ink:#E7EFEE;--muted:#93A6AA;--line:#2A3C41;
-  --accent:#4FC3CC;--accent-ink:#0F1A1D;--accent-soft:#16363B;--obs:#B7A1F2;--obs-soft:#2B2442;--crit:#F2877F;color-scheme:dark}}
+  --accent:#4FC3CC;--accent-ink:#0F1A1D;--accent-soft:#16363B;--obs:#B7A1F2;--obs-soft:#2B2442;
+  --crit:#F2877F;--crit-soft:#3C1E1B;--warn:#F0A646;--warn-soft:#3A2B14;color-scheme:dark}}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:var(--bg)}
 body{color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased;
   padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   -webkit-tap-highlight-color:transparent}
 :focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:8px}
-.wrap{max-width:960px;margin:0 auto;padding:28px 16px 48px}
-header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
 .date{color:var(--muted);font-size:14px}
 h1{font-size:30px;font-weight:700;line-height:1.15}
 .clock{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.top{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
 .hero{display:flex;align-items:center;gap:18px;text-decoration:none;background:var(--accent);color:var(--accent-ink);
-  border-radius:20px;padding:24px 22px;margin-bottom:16px;min-height:110px;touch-action:manipulation}
-.hero:active{transform:scale(.99)}
+  border-radius:20px;padding:22px;min-height:110px;touch-action:manipulation}
+.hero:active,.tile:active{transform:scale(.985)}
 .hero .ic{font-size:40px;line-height:1}
 .hero b{display:block;font-size:24px}
 .hero span{opacity:.85;font-size:14px}
+.count{border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--warn);display:flex;flex-direction:column;justify-content:center;text-decoration:none;color:var(--ink)}
+.count.crit{border-top-color:var(--crit)}
+.count .n{font-size:34px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
+.count .l{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-.tile{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:118px;padding:16px;
+.tile{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:112px;padding:16px;
   background:var(--surface);border:1px solid var(--line);border-radius:16px;text-decoration:none;color:var(--ink);touch-action:manipulation}
-.tile:active{transform:scale(.98)}
 .tile .ic{font-size:30px;line-height:1}
 .tile b{font-size:17px;overflow-wrap:anywhere}
 .tile small{display:block;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
-.tile .key{position:absolute;top:10px;right:12px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tile .key{position:absolute;top:10px;right:12px;font-size:11px;color:var(--muted)}
 .tile.obs{background:var(--obs-soft);border-color:var(--obs)}
 .edit .tile{border-style:dashed}
 .tools{display:flex;gap:6px;margin-top:4px}
-.tools button{padding:6px 10px;font-size:13px}
+.tools button{padding:6px 10px;font-size:13px;min-height:36px}
+.cols{display:grid;grid-template-columns:3fr 2fr;gap:16px;align-items:start;margin-top:16px}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.card h2{font-size:17px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card h2 small{font-weight:400;font-size:12px;color:var(--muted)}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:10px}
+.day{border:1px solid var(--line);border-radius:12px;padding:6px 2px;text-align:center;background:var(--bg);font:inherit;color:var(--ink);cursor:pointer;min-height:64px;touch-action:manipulation}
+.day .wd{font-size:11px;color:var(--muted);text-transform:uppercase}
+.day .dn{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.day .dots{display:flex;justify-content:center;gap:3px;height:6px;margin-top:2px}
+.day .dots i{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.day .dots i.klausur,.day .dots i.pruefung{background:var(--crit)}
+.day .dots i.geld{background:var(--warn)}
+.day[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft)}
+.day.today .dn{color:var(--accent)}
+.row{display:grid;grid-template-columns:78px 1fr auto;gap:10px;padding:9px 0;border-top:1px solid var(--line);align-items:start}
+.row:first-child{border-top:none}
+.when{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.what{font-weight:500;overflow-wrap:anywhere}
+.sub{font-size:13px;color:var(--muted)}
+.tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;border-radius:4px;padding:1px 6px;margin-right:6px;background:var(--line);color:var(--muted)}
+.tag.klausur,.tag.pruefung{background:var(--crit-soft);color:var(--crit)}
+.tag.geld{background:var(--warn-soft);color:var(--warn)}
+.tag.tipp,.tag.frei{background:var(--accent-soft);color:var(--accent)}
+.chip{font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap;background:var(--accent-soft);color:var(--accent)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.grp{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:14px 0 2px}
+.empty{color:var(--muted);font-size:14px;padding:6px 0}
 button{font:inherit;font-weight:600;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
   border-radius:10px;padding:10px 16px;touch-action:manipulation;min-height:44px}
 button.ghost{background:transparent;color:var(--accent)}
 button.danger{border-color:var(--crit);color:var(--crit);background:transparent}
-.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:16px}
-.panel h2{font-size:17px;margin-bottom:10px}
+button.sm{min-height:34px;padding:4px 10px;font-size:13px}
+button:disabled{opacity:.4;cursor:default}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 form{display:flex;flex-wrap:wrap;gap:8px}
-label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);flex:1 1 200px}
-input[type=text],input[type=url]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);flex:1 1 160px}
+input[type=text],input[type=url],input[type=date],input[type=time],select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
+textarea{min-height:120px;resize:vertical;display:block}
 .check{display:flex;gap:10px;align-items:center;font-size:15px;margin-top:10px}
 .check input{width:22px;height:22px;accent-color:var(--accent)}
-.hint{color:var(--muted);font-size:13px;margin-top:10px}
+.hint{color:var(--muted);font-size:13px;margin-top:8px}
+.clockbig{font-size:42px;font-weight:700;font-variant-numeric:tabular-nums}
+.timer{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);
-  border-radius:14px;padding:12px 16px;display:flex;gap:14px;align-items:center;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
+  border-radius:14px;padding:12px 16px;display:flex;gap:14px;align-items:center;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px);z-index:9}
 .toast button{min-height:36px;padding:6px 12px;background:var(--bg);color:var(--ink);border-color:var(--bg)}
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 0;overflow-x:auto;scrollbar-width:none}
+nav.tabs button{background:transparent;border:none;border-bottom:3px solid transparent;border-radius:0;color:var(--muted);padding:10px 14px;white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
 [hidden]{display:none!important}
-@media (max-width:520px){h1{font-size:24px}.clock{font-size:34px}.grid{grid-template-columns:1fr 1fr}}
+@media (max-width:760px){.top,.cols{grid-template-columns:1fr}}
+@media (max-width:520px){h1{font-size:24px}.clock{font-size:34px}.grid{grid-template-columns:1fr 1fr}.row{grid-template-columns:64px 1fr auto}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;transform:none!important}}
 </style>
 </head>
@@ -79,40 +120,113 @@ input[type=text],input[type=url]{font:inherit;color:var(--ink);background:var(--
     <div class="clock" id="clock" aria-hidden="true">--:--</div>
   </header>
 
-  <a class="hero" id="hero" target="_blank" rel="noopener">
-    <div class="ic" aria-hidden="true">🏠</div>
-    <div><b>Mein Hub öffnen</b><span>Heute, Aufgaben, Termine, Notizen</span></div>
-  </a>
+  <div class="top">
+    <a class="hero" id="hero" target="_blank" rel="noopener">
+      <div class="ic" aria-hidden="true">🏠</div>
+      <div><b>Mein Hub öffnen</b><span>Heute, Aufgaben, Termine, Notizen</span></div>
+    </a>
+    <a class="count" id="count" href="#termine"></a>
+  </div>
 
   <div class="grid" id="grid" aria-label="Schnellzugriffe"></div>
 
-  <div class="bar">
-    <button type="button" class="ghost" id="editBtn" aria-pressed="false">Bearbeiten</button>
-    <button type="button" class="ghost" id="setBtn" aria-expanded="false">Einstellungen</button>
-    <button type="button" id="installBtn" hidden>Als App installieren</button>
-  </div>
+  <nav class="tabs" role="tablist" aria-label="Bereiche">
+    <button type="button" role="tab" data-tab="start">Übersicht</button>
+    <button type="button" role="tab" data-tab="termine">Alle Termine</button>
+    <button type="button" role="tab" data-tab="einst">Einstellungen</button>
+  </nav>
 
-  <section class="panel" id="addPanel" hidden>
-    <h2>Neuer Schnellzugriff</h2>
-    <form id="addForm">
-      <label class="f">Name<input type="text" id="addName" required placeholder="z. B. Stundenplan"></label>
-      <label class="f">Adresse<input type="text" id="addUrl" required placeholder="https://… oder obsidian://…"></label>
-      <label class="f" style="flex:0 1 90px">Symbol<input type="text" id="addIcon" maxlength="4" placeholder="⭐"></label>
-      <button type="submit" style="align-self:flex-end">Hinzufügen</button>
-    </form>
+  <!-- Übersicht -->
+  <section id="tab-start" class="cols">
+    <div class="col">
+      <div class="card">
+        <h2>Woche <small id="weekHint"></small></h2>
+        <div class="days" id="days"></div>
+        <div id="dayList"></div>
+        <div id="soon"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <h2>Schnellnotiz <small>speichert automatisch</small></h2>
+        <textarea id="note" aria-label="Schnellnotiz" placeholder="Ideen, Fragen, Einkäufe …"></textarea>
+        <div class="bar">
+          <button type="button" class="ghost sm" id="noteObs">In Obsidian-Inbox</button>
+          <button type="button" class="ghost sm" id="noteCopy">Kopieren</button>
+          <button type="button" class="ghost sm" id="noteClear">Leeren</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Lern-Timer <small id="timerInfo"></small></h2>
+        <div class="bar" style="margin:0 0 10px">
+          <button type="button" class="sm" data-min="25" aria-pressed="true">25 Min Lernen</button>
+          <button type="button" class="sm ghost" data-min="5" aria-pressed="false">5 Min Pause</button>
+        </div>
+        <div class="timer"><div class="clockbig" id="tClock">25:00</div><button type="button" id="tGo">Start</button><button type="button" class="ghost" id="tReset">Zurücksetzen</button></div>
+      </div>
+    </div>
   </section>
 
-  <section class="panel" id="setPanel" hidden>
-    <h2>Einstellungen</h2>
-    <form id="setForm">
-      <label class="f" style="flex-basis:100%">Adresse deines Hubs<input type="url" id="hubUrl" required></label>
-      <label class="f">Obsidian-Vault<input type="text" id="vault" required></label>
-      <label class="f">Dein Name<input type="text" id="name"></label>
-      <button type="submit" style="align-self:flex-end">Speichern</button>
-    </form>
-    <label class="check"><input type="checkbox" id="auto"> Beim Start den Hub automatisch öffnen</label>
-    <p class="hint" id="installHint"></p>
-    <button type="button" class="danger" id="resetBtn" style="margin-top:12px">Auf Standard zurücksetzen</button>
+  <!-- Alle Termine -->
+  <section id="tab-termine" hidden>
+    <div class="cols">
+      <div class="col"><div class="card"><h2>Kommende Termine <small id="allCount"></small></h2><div id="allList"></div>
+        <label class="check"><input type="checkbox" id="showPast"> Vergangene Termine zeigen</label></div></div>
+      <div class="col">
+        <div class="card">
+          <h2>Termin eintragen</h2>
+          <form id="tForm">
+            <label class="f" style="flex-basis:100%">Titel<input type="text" id="tTitle" required></label>
+            <label class="f">Datum<input type="date" id="tDate" required></label>
+            <label class="f">Uhrzeit<input type="time" id="tTime"></label>
+            <label class="f">Art<select id="tCat"><option value="event">Termin</option><option value="klausur">Prüfung</option><option value="geld">Geld</option><option value="tipp">Plan</option><option value="frei">Frei</option></select></label>
+            <label class="f" style="flex-basis:100%">Notiz / Wer / Ort<input type="text" id="tWho"></label>
+            <label class="f" style="flex-basis:100%">Wiederholen<select id="tRep"><option value="0">Nicht wiederholen</option><option value="7">Jede Woche (8×)</option><option value="14">Alle 2 Wochen (6×)</option></select></label>
+            <button type="submit">Eintragen</button>
+          </form>
+        </div>
+        <div class="card">
+          <h2>Importieren &amp; Sichern</h2>
+          <p class="hint" style="margin:0 0 10px">Lädt Termine aus einer Datei (.json aus deinem Hub oder .ics aus einem Kalender). Doppelte Termine werden übersprungen.</p>
+          <div class="bar" style="margin:0">
+            <button type="button" id="impBtn">Datei importieren</button>
+            <button type="button" class="ghost" id="expBtn">Sicherung herunterladen</button>
+            <button type="button" class="ghost" id="icsBtn">Als Kalender (.ics)</button>
+          </div>
+          <input type="file" id="impFile" accept=".json,.ics,application/json,text/calendar" hidden>
+          <button type="button" class="danger sm" id="wipeBtn" style="margin-top:12px">Alle Termine löschen</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Einstellungen -->
+  <section id="tab-einst" hidden>
+    <div class="cols">
+      <div class="col"><div class="card">
+        <h2>Schnellzugriffe</h2>
+        <div class="bar" style="margin:0 0 12px"><button type="button" class="ghost" id="editBtn" aria-pressed="false">Kacheln bearbeiten</button></div>
+        <form id="addForm">
+          <label class="f">Name<input type="text" id="addName" required placeholder="z. B. Stundenplan"></label>
+          <label class="f">Adresse<input type="text" id="addUrl" required placeholder="https://… oder obsidian://…"></label>
+          <label class="f" style="flex:0 1 90px">Symbol<input type="text" id="addIcon" maxlength="4" placeholder="⭐"></label>
+          <button type="submit" style="align-self:flex-end">Hinzufügen</button>
+        </form>
+      </div></div>
+      <div class="col"><div class="card">
+        <h2>Allgemein</h2>
+        <form id="setForm">
+          <label class="f" style="flex-basis:100%">Adresse deines Hubs<input type="url" id="hubUrl" required></label>
+          <label class="f">Obsidian-Vault<input type="text" id="vault" required></label>
+          <label class="f">Dein Name<input type="text" id="name"></label>
+          <button type="submit" style="align-self:flex-end">Speichern</button>
+        </form>
+        <label class="check"><input type="checkbox" id="auto"> Beim Start den Hub automatisch öffnen</label>
+        <p class="hint" id="installHint"></p>
+        <div class="bar"><button type="button" id="installBtn" hidden>Als App installieren</button>
+        <button type="button" class="danger" id="resetBtn">Kacheln &amp; Einstellungen zurücksetzen</button></div>
+      </div></div>
+    </div>
   </section>
 </div>
 
@@ -121,8 +235,12 @@ input[type=text],input[type=url]{font:inherit;color:var(--ink);background:var(--
 <script>
 "use strict";
 var DEFAULT_HUB = "https://claude.ai/artifact/T1BkfiURb5EtKMgHc2HBst#no_universal_links";
-var STORE = "hub-launcher-v1";
+var STORE = "hub-launcher-v1", TSTORE = "hub-launcher-termine", NSTORE = "hub-launcher-notiz";
+var TAGNAME = { klausur: "Prüfung", pruefung: "Prüfung", event: "Termin", frei: "Frei", geld: "Geld", tipp: "Plan" };
+var WD = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+var MON = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
 
+/* ---------- Speicher ---------- */
 function defaults(){
   return {
     hub: DEFAULT_HUB, vault: "SecondBrain", name: "Adrian", auto: false,
@@ -135,14 +253,28 @@ function defaults(){
     ]
   };
 }
-function load(){
-  try { var s = JSON.parse(localStorage.getItem(STORE)); if (s && s.tiles) return Object.assign(defaults(), s); } catch (e) {}
-  return defaults();
-}
-var S = load();
-function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
+function read(k, fb){ try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; } catch (e) { return fb; } }
+function write(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+var S = Object.assign(defaults(), read(STORE, {}));
+var T = read(TSTORE, []);
+function save(){ write(STORE, S); }
+function saveT(){ write(TSTORE, T); }
 
-/* Obsidian-Kurzform "obsidian:<Datei>" in echte Links umwandeln */
+/* ---------- Helfer ---------- */
+function el(tag, cls, txt){ var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+function mid(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function iso(d){ return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function parse(s){ var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+function addDays(d, n){ return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+function diff(a, b){ return Math.round((mid(a) - mid(b)) / 86400000); }
+function short(d){ return d.getDate() + ". " + MON[d.getMonth()].slice(0, 3) + "."; }
+function today(){ return mid(new Date()); }
+function chipFor(n){ if (n < 0) return { t: "vorbei", c: "" }; if (n === 0) return { t: "heute", c: "crit" }; if (n === 1) return { t: "morgen", c: "warn" }; return { t: "in " + n + " Tagen", c: n <= 7 ? "warn" : "" }; }
+function isExam(e){ return e.cat === "klausur" || e.cat === "pruefung"; }
+function sortT(a, b){ return (a.d + (a.time || "99")).localeCompare(b.d + (b.time || "99")); }
+function onDay(d){ var k = iso(d); return T.filter(function(e){ return e.d === k; }).sort(sortT); }
+function newId(){ return "x" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
 function resolve(u){
   if (u.indexOf("obsidian:") === 0 && u.indexOf("obsidian://") !== 0) {
     var f = u.slice(9);
@@ -152,32 +284,42 @@ function resolve(u){
 }
 function isWeb(u){ return /^https?:\/\//i.test(u); }
 function go(u){ u = resolve(u); if (isWeb(u)) { var w = window.open(u, "_blank"); if (w) w.opener = null; else location.href = u; } else location.href = u; }
-function el(tag, cls, txt){ var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 
 /* ---------- Kopfzeile ---------- */
-var WD = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
-var MON = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
 function tick(){
   var d = new Date(), h = d.getHours();
-  document.getElementById("clock").textContent = String(h).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
-  document.getElementById("date").textContent = WD[d.getDay()] + ", " + d.getDate() + ". " + MON[d.getMonth()];
+  document.getElementById("clock").textContent = String(h).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  document.getElementById("date").textContent = WD[d.getDay()] + ", " + d.getDate() + ". " + MON[d.getMonth()] + " " + d.getFullYear();
   document.getElementById("greet").textContent = (h < 11 ? "Guten Morgen" : h < 18 ? "Guten Tag" : "Guten Abend") + (S.name ? ", " + S.name : "");
 }
-setInterval(tick, 15000);
+var lastDay = iso(today());
+setInterval(function(){ tick(); if (iso(today()) !== lastDay) { lastDay = iso(today()); selDay = today(); renderAll(); } }, 15000);
+
+/* ---------- Countdown nächste Prüfung ---------- */
+function renderCount(){
+  var c = document.getElementById("count"); c.textContent = ""; c.className = "count";
+  var t0 = today();
+  var ex = T.filter(function(e){ return isExam(e) && diff(parse(e.d), t0) >= 0; }).sort(sortT)[0];
+  if (!ex) {
+    c.appendChild(el("div", "n", "–"));
+    c.appendChild(el("div", "l", T.length ? "Keine Prüfung offen" : "Noch keine Termine – unter „Alle Termine“ importieren"));
+    return;
+  }
+  var n = diff(parse(ex.d), t0);
+  if (n <= 7) c.classList.add("crit");
+  c.appendChild(el("div", "n", n === 0 ? "Heute" : n === 1 ? "Morgen" : n + " Tage"));
+  c.appendChild(el("div", "l", "bis " + ex.t + " · " + short(parse(ex.d))));
+}
 
 /* ---------- Kacheln ---------- */
-var editing = false;
-var grid = document.getElementById("grid");
-function render(){
-  tick();
-  var hero = document.getElementById("hero"); hero.href = S.hub;
-  grid.textContent = "";
-  grid.classList.toggle("edit", editing);
+var editing = false, grid = document.getElementById("grid");
+function renderTiles(){
+  document.getElementById("hero").href = S.hub;
+  grid.textContent = ""; grid.classList.toggle("edit", editing);
   S.tiles.forEach(function(t, i){
     var href = resolve(t.u);
     var a = el("a", "tile" + (href.indexOf("obsidian://") === 0 ? " obs" : ""));
-    a.href = href;
-    if (isWeb(href)) { a.target = "_blank"; a.rel = "noopener"; }
+    a.href = href; if (isWeb(href)) { a.target = "_blank"; a.rel = "noopener"; }
     a.appendChild(el("div", "ic", t.i || "🔗"));
     var tx = el("div"); tx.appendChild(el("b", null, t.t)); if (t.s) tx.appendChild(el("small", null, t.s)); a.appendChild(tx);
     if (i < 9) a.appendChild(el("span", "key", String(i + 1)));
@@ -187,22 +329,245 @@ function render(){
       [["←", -1, "Nach vorne: "], ["→", 1, "Nach hinten: "]].forEach(function(p){
         var b = el("button", "ghost", p[0]); b.type = "button"; b.setAttribute("aria-label", p[2] + t.t);
         b.disabled = (p[1] < 0 && i === 0) || (p[1] > 0 && i === S.tiles.length - 1);
-        b.addEventListener("click", function(){ var j = i + p[1]; var x = S.tiles[i]; S.tiles[i] = S.tiles[j]; S.tiles[j] = x; save(); render(); });
+        b.addEventListener("click", function(){ var j = i + p[1]; var x = S.tiles[i]; S.tiles[i] = S.tiles[j]; S.tiles[j] = x; save(); renderTiles(); });
         tools.appendChild(b);
       });
       var del = el("button", "danger", "✕"); del.type = "button"; del.setAttribute("aria-label", "Entfernen: " + t.t);
-      del.addEventListener("click", function(){ S.tiles.splice(i, 1); save(); render(); });
+      del.addEventListener("click", function(){ S.tiles.splice(i, 1); save(); renderTiles(); });
       tools.appendChild(del); a.appendChild(tools);
     }
     grid.appendChild(a);
   });
 }
 
-/* ---------- Bearbeiten & Einstellungen ---------- */
-var editBtn = document.getElementById("editBtn"), setBtn = document.getElementById("setBtn");
+/* ---------- Termin-Zeile ---------- */
+function termRow(e, opts){
+  var dt = parse(e.d), r = el("div", "row");
+  r.appendChild(el("span", "when", opts.dateCol ? short(dt) + (e.time ? "\n" + e.time : "") : (e.time || "ganztägig")));
+  r.firstChild.style.whiteSpace = "pre-line";
+  var w = el("div"), b = el("div", "what");
+  b.appendChild(el("span", "tag " + (e.cat || "event"), TAGNAME[e.cat] || "Termin"));
+  b.appendChild(document.createTextNode(e.t)); w.appendChild(b);
+  if (e.who || e.ort) w.appendChild(el("div", "sub", e.who || e.ort));
+  r.appendChild(w);
+  var side = el("div"); side.style.display = "flex"; side.style.gap = "6px"; side.style.alignItems = "center"; side.style.flexWrap = "wrap"; side.style.justifyContent = "flex-end";
+  if (opts.chip) { var ch = chipFor(diff(dt, today())); side.appendChild(el("span", "chip " + ch.c, ch.t)); }
+  if (opts.del) {
+    var d = el("button", "ghost sm", "Löschen"); d.type = "button"; d.setAttribute("aria-label", "Termin löschen: " + e.t);
+    d.addEventListener("click", function(){
+      var idx = T.indexOf(e); if (idx < 0) return; T.splice(idx, 1); saveT(); renderAll();
+      toast("Termin gelöscht.", "Rückgängig", function(){ T.splice(idx, 0, e); saveT(); renderAll(); });
+    });
+    side.appendChild(d);
+  }
+  r.appendChild(side);
+  return r;
+}
+
+/* ---------- Übersicht: Woche ---------- */
+var selDay = today();
+function renderWeek(){
+  var t0 = today(), box = document.getElementById("days"); box.textContent = "";
+  for (var k = 0; k < 7; k++) (function(d){
+    var b = el("button", "day" + (k === 0 ? " today" : "")); b.type = "button";
+    b.setAttribute("aria-pressed", iso(d) === iso(selDay));
+    var items = onDay(d);
+    b.setAttribute("aria-label", WD[d.getDay()] + " " + short(d) + ", " + items.length + " Einträge");
+    b.appendChild(el("div", "wd", k === 0 ? "Heute" : WD[d.getDay()].slice(0, 2)));
+    b.appendChild(el("div", "dn", String(d.getDate())));
+    var dots = el("div", "dots"); items.slice(0, 4).forEach(function(e){ dots.appendChild(el("i", e.cat || "event")); }); b.appendChild(dots);
+    b.addEventListener("click", function(){ selDay = d; renderWeek(); });
+    box.appendChild(b);
+  })(addDays(t0, k));
+
+  var n = diff(selDay, t0);
+  document.getElementById("weekHint").textContent = n === 0 ? "heute" : n === 1 ? "morgen" : WD[selDay.getDay()] + ", " + short(selDay);
+  var list = document.getElementById("dayList"); list.textContent = "";
+  var items = onDay(selDay);
+  if (!items.length) list.appendChild(el("div", "empty", n === 0 ? "Heute steht nichts an." : "An diesem Tag steht nichts an."));
+  items.forEach(function(e){ list.appendChild(termRow(e, {})); });
+
+  var soon = document.getElementById("soon"); soon.textContent = "";
+  var later = T.filter(function(e){ var x = diff(parse(e.d), t0); return x >= 7 && x <= 30 && e.cat !== "tipp"; }).sort(sortT).slice(0, 5);
+  if (later.length) {
+    soon.appendChild(el("div", "grp", "Danach (nächste 30 Tage)"));
+    later.forEach(function(e){ soon.appendChild(termRow(e, { dateCol: true, chip: true })); });
+  }
+}
+
+/* ---------- Alle Termine ---------- */
+function renderAllList(){
+  var t0 = today(), past = document.getElementById("showPast").checked;
+  var list = document.getElementById("allList"); list.textContent = "";
+  var items = T.filter(function(e){ return past || diff(parse(e.d), t0) >= 0; }).sort(sortT);
+  document.getElementById("allCount").textContent = items.length + " Einträge";
+  if (!items.length) {
+    list.appendChild(el("div", "empty", T.length ? "Keine kommenden Termine." : "Noch keine Termine. Trag rechts einen ein oder importiere eine Datei."));
+    return;
+  }
+  var lastM = "";
+  items.forEach(function(e){
+    var dt = parse(e.d), m = MON[dt.getMonth()] + " " + dt.getFullYear();
+    if (m !== lastM) { list.appendChild(el("div", "grp", m)); lastM = m; }
+    list.appendChild(termRow(e, { dateCol: true, chip: true, del: true }));
+  });
+}
+document.getElementById("showPast").addEventListener("change", renderAllList);
+
+document.getElementById("tDate").value = iso(today());
+document.getElementById("tForm").addEventListener("submit", function(ev){
+  ev.preventDefault();
+  var title = document.getElementById("tTitle").value.trim(), d = document.getElementById("tDate").value;
+  if (!title || !d) return;
+  var rep = +document.getElementById("tRep").value, times = rep === 7 ? 8 : rep === 14 ? 6 : 1;
+  for (var i = 0; i < times; i++) {
+    T.push({ id: newId(), d: iso(addDays(parse(d), i * rep)), time: document.getElementById("tTime").value,
+      t: title, cat: document.getElementById("tCat").value, who: document.getElementById("tWho").value.trim() });
+  }
+  saveT(); document.getElementById("tTitle").value = ""; document.getElementById("tWho").value = "";
+  renderAll(); toast(times > 1 ? times + " Termine eingetragen." : "Termin eingetragen.");
+});
+
+/* ---------- Import / Export ---------- */
+function unesc(s){ return s.replace(/\\n/gi, " ").replace(/\\([,;\\])/g, "$1"); }
+function parseICS(text){
+  var lines = text.replace(/\r\n[ \t]/g, "").replace(/\n[ \t]/g, "").split(/\r?\n/), out = [], cur = null;
+  lines.forEach(function(l){
+    if (l === "BEGIN:VEVENT") cur = {};
+    else if (l === "END:VEVENT") { if (cur && cur.d && cur.t) out.push(cur); cur = null; }
+    else if (cur) {
+      var i = l.indexOf(":"); if (i < 0) return;
+      var key = l.slice(0, i).split(";")[0].toUpperCase(), val = l.slice(i + 1);
+      if (key === "SUMMARY") cur.t = unesc(val);
+      else if (key === "LOCATION") cur.who = unesc(val);
+      else if (key === "DTSTART") {
+        var m = val.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?/); if (!m) return;
+        var dt = m[7] ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5])) : new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0));
+        cur.d = iso(dt); if (m[4]) cur.time = String(dt.getHours()).padStart(2, "0") + ":" + String(dt.getMinutes()).padStart(2, "0");
+      }
+    }
+  });
+  return out.map(function(e){ return { d: e.d, time: e.time || "", t: e.t, cat: /prüfung|klausur|schulaufgabe|examen|test/i.test(e.t) ? "klausur" : "event", who: e.who || "" }; });
+}
+function importItems(items){
+  var keys = {}; T.forEach(function(e){ keys[e.d + "|" + e.t] = 1; });
+  var added = 0;
+  items.forEach(function(x){
+    if (!x || !x.d || !x.t || !/^\d{4}-\d{2}-\d{2}$/.test(x.d)) return;
+    var k = x.d + "|" + x.t; if (keys[k]) return; keys[k] = 1;
+    T.push({ id: newId(), d: x.d, time: x.time || "", t: String(x.t), cat: TAGNAME[x.cat] ? x.cat : "event", who: x.who || x.ort || "" });
+    added++;
+  });
+  saveT(); renderAll();
+  toast(added + " Termine importiert" + (items.length - added > 0 ? ", " + (items.length - added) + " übersprungen." : "."));
+}
+document.getElementById("impBtn").addEventListener("click", function(){ document.getElementById("impFile").click(); });
+document.getElementById("impFile").addEventListener("change", function(ev){
+  var f = ev.target.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(){
+    var txt = String(r.result);
+    try {
+      if (/BEGIN:VCALENDAR/.test(txt)) importItems(parseICS(txt));
+      else { var j = JSON.parse(txt); importItems(Array.isArray(j) ? j : (j.termine || [])); }
+    } catch (e) { toast("Datei konnte nicht gelesen werden."); }
+    ev.target.value = "";
+  };
+  r.readAsText(f);
+});
+function download(name, text, type){
+  var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: type }));
+  a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+document.getElementById("expBtn").addEventListener("click", function(){
+  download("termine-" + iso(today()) + ".json", JSON.stringify({ termine: T }, null, 2), "application/json");
+});
+function icsEsc(s){ return String(s).replace(/([,;\\])/g, "\\$1"); }
+document.getElementById("icsBtn").addEventListener("click", function(){
+  var L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Mein Hub//DE"], stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+  T.forEach(function(e){
+    var d = e.d.replace(/-/g, "");
+    L.push("BEGIN:VEVENT", "UID:" + e.id + "@mein-hub", "DTSTAMP:" + stamp);
+    if (e.time) { var tm = e.time.replace(":", ""); L.push("DTSTART:" + d + "T" + tm + "00", "DURATION:PT1H"); }
+    else { L.push("DTSTART;VALUE=DATE:" + d, "DTEND;VALUE=DATE:" + iso(addDays(parse(e.d), 1)).replace(/-/g, "")); }
+    L.push("SUMMARY:" + icsEsc((TAGNAME[e.cat] && e.cat !== "event" ? TAGNAME[e.cat] + ": " : "") + e.t));
+    if (e.who) L.push("DESCRIPTION:" + icsEsc(e.who));
+    if (isExam(e)) L.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsEsc(e.t), "TRIGGER:-P1D", "END:VALARM");
+    L.push("END:VEVENT");
+  });
+  L.push("END:VCALENDAR");
+  download("termine.ics", L.join("\r\n"), "text/calendar");
+});
+document.getElementById("wipeBtn").addEventListener("click", function(){
+  if (!T.length) return;
+  if (confirm("Wirklich alle " + T.length + " Termine löschen? Tipp: Vorher „Sicherung herunterladen“.")) { T = []; saveT(); renderAll(); }
+});
+
+/* ---------- Schnellnotiz ---------- */
+var note = document.getElementById("note"), nt = null;
+note.value = read(NSTORE, "");
+note.addEventListener("input", function(){ clearTimeout(nt); nt = setTimeout(function(){ write(NSTORE, note.value); }, 400); });
+document.getElementById("noteObs").addEventListener("click", function(){
+  if (!note.value.trim()) return toast("Die Notiz ist leer.");
+  location.href = "obsidian://new?vault=" + encodeURIComponent(S.vault) + "&file=" + encodeURIComponent("00 Inbox/Inbox") +
+    "&append=true&content=" + encodeURIComponent("\n- " + iso(today()) + ": " + note.value.trim());
+});
+document.getElementById("noteCopy").addEventListener("click", function(){
+  try { navigator.clipboard.writeText(note.value).then(function(){ toast("Kopiert."); }, function(){ toast("Kopieren nicht möglich."); }); } catch (e) { toast("Kopieren nicht möglich."); }
+});
+document.getElementById("noteClear").addEventListener("click", function(){
+  if (!note.value) return; var old = note.value; note.value = ""; write(NSTORE, "");
+  toast("Notiz geleert.", "Rückgängig", function(){ note.value = old; write(NSTORE, old); });
+});
+
+/* ---------- Lern-Timer (läuft auch weiter, wenn das Tablet kurz gesperrt ist) ---------- */
+var tMode = 25 * 60, tEnd = 0, tLeft = tMode, tInt = null;
+var tClock = document.getElementById("tClock"), tGo = document.getElementById("tGo");
+function fmt(s){ return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
+function tStop(){ clearInterval(tInt); tInt = null; tGo.textContent = "Start"; }
+function tTick(){
+  tLeft = Math.max(0, Math.round((tEnd - Date.now()) / 1000)); tClock.textContent = fmt(tLeft);
+  document.title = tInt ? fmt(tLeft) + " · Mein Hub" : "Mein Hub";
+  if (tLeft <= 0) { tStop(); document.title = "Mein Hub"; tLeft = tMode; tClock.textContent = fmt(tMode);
+    try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch (e) {}
+    beep(); toast(tMode >= 1500 ? "Lernzeit vorbei – Pause machen!" : "Pause vorbei – weiter geht’s!"); }
+}
+function beep(){ try { var c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain();
+  o.frequency.value = 880; o.connect(g); g.connect(c.destination); g.gain.setValueAtTime(.2, c.currentTime); o.start(); o.stop(c.currentTime + .6); } catch (e) {} }
+tGo.addEventListener("click", function(){
+  if (tInt) { tStop(); return; }
+  tEnd = Date.now() + tLeft * 1000; tGo.textContent = "Pause"; tInt = setInterval(tTick, 500); tTick();
+});
+document.getElementById("tReset").addEventListener("click", function(){ tStop(); tLeft = tMode; tClock.textContent = fmt(tMode); document.title = "Mein Hub"; });
+Array.prototype.forEach.call(document.querySelectorAll("[data-min]"), function(b){
+  b.addEventListener("click", function(){
+    tStop(); tMode = +b.dataset.min * 60; tLeft = tMode; tClock.textContent = fmt(tMode);
+    Array.prototype.forEach.call(document.querySelectorAll("[data-min]"), function(x){ var on = x === b; x.setAttribute("aria-pressed", on); x.classList.toggle("ghost", !on); });
+  });
+});
+
+/* ---------- Tabs ---------- */
+var TABS = ["start", "termine", "einst"];
+function showTab(name){
+  if (TABS.indexOf(name) < 0) name = "start";
+  TABS.forEach(function(t){ document.getElementById("tab-" + t).hidden = t !== name; });
+  Array.prototype.forEach.call(document.querySelectorAll("nav.tabs button"), function(b){ b.setAttribute("aria-selected", b.dataset.tab === name); });
+  if (name === "einst") fillSettings();
+}
+Array.prototype.forEach.call(document.querySelectorAll("nav.tabs button"), function(b){
+  b.addEventListener("click", function(){ history.replaceState(null, "", b.dataset.tab === "start" ? location.pathname : "#" + b.dataset.tab); showTab(b.dataset.tab); });
+});
+window.addEventListener("hashchange", function(){ showTab(location.hash.slice(1)); });
+
+/* ---------- Einstellungen ---------- */
+function fillSettings(){
+  document.getElementById("hubUrl").value = S.hub; document.getElementById("vault").value = S.vault;
+  document.getElementById("name").value = S.name; document.getElementById("auto").checked = !!S.auto;
+}
+var editBtn = document.getElementById("editBtn");
 editBtn.addEventListener("click", function(){
-  editing = !editing; editBtn.setAttribute("aria-pressed", editing); editBtn.textContent = editing ? "Fertig" : "Bearbeiten";
-  document.getElementById("addPanel").hidden = !editing; render();
+  editing = !editing; editBtn.setAttribute("aria-pressed", editing); editBtn.textContent = editing ? "Fertig" : "Kacheln bearbeiten";
+  renderTiles(); if (editing) grid.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 document.getElementById("addForm").addEventListener("submit", function(e){
   e.preventDefault();
@@ -210,23 +575,18 @@ document.getElementById("addForm").addEventListener("submit", function(e){
   var url = u.value.trim(); if (!url) return;
   if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = "https://" + url;
   S.tiles.push({ key: "k" + Date.now().toString(36), t: n.value.trim() || url, s: "", i: ic.value.trim() || "🔗", u: url });
-  n.value = u.value = ic.value = ""; save(); render();
-});
-setBtn.addEventListener("click", function(){
-  var p = document.getElementById("setPanel"); p.hidden = !p.hidden; setBtn.setAttribute("aria-expanded", !p.hidden);
-  document.getElementById("hubUrl").value = S.hub; document.getElementById("vault").value = S.vault;
-  document.getElementById("name").value = S.name; document.getElementById("auto").checked = !!S.auto;
+  n.value = u.value = ic.value = ""; save(); renderTiles(); toast("Kachel hinzugefügt.");
 });
 document.getElementById("setForm").addEventListener("submit", function(e){
   e.preventDefault();
   S.hub = document.getElementById("hubUrl").value.trim() || DEFAULT_HUB;
   S.vault = document.getElementById("vault").value.trim() || "SecondBrain";
   S.name = document.getElementById("name").value.trim();
-  save(); render(); toast("Gespeichert.");
+  save(); tick(); renderTiles(); toast("Gespeichert.");
 });
 document.getElementById("auto").addEventListener("change", function(e){ S.auto = e.target.checked; save(); });
 document.getElementById("resetBtn").addEventListener("click", function(){
-  if (confirm("Alle Kacheln und Einstellungen auf Standard zurücksetzen?")) { S = defaults(); save(); render(); document.getElementById("setPanel").hidden = true; }
+  if (confirm("Kacheln und Einstellungen auf Standard zurücksetzen? Deine Termine bleiben erhalten.")) { S = defaults(); save(); fillSettings(); tick(); renderTiles(); }
 });
 
 /* ---------- Hinweis-Leiste ---------- */
@@ -234,13 +594,13 @@ var toastTimer = null, toastAction = null;
 function toast(msg, btnText, onBtn){
   var t = document.getElementById("toast"); document.getElementById("toastText").textContent = msg;
   var b = document.getElementById("toastBtn"); b.hidden = !btnText; b.textContent = btnText || ""; toastAction = onBtn || null;
-  t.hidden = false; clearTimeout(toastTimer); if (!btnText) toastTimer = setTimeout(function(){ t.hidden = true; }, 1800);
+  t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.hidden = true; }, btnText ? 5000 : 2000);
 }
-document.getElementById("toastBtn").addEventListener("click", function(){ if (toastAction) toastAction(); document.getElementById("toast").hidden = true; });
+document.getElementById("toastBtn").addEventListener("click", function(){ var a = toastAction; toastAction = null; document.getElementById("toast").hidden = true; if (a) a(); });
 
 /* ---------- Tastatur: 0 = Hub, 1–9 = Kacheln ---------- */
 document.addEventListener("keydown", function(e){
-  if (e.ctrlKey || e.metaKey || e.altKey || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  if (e.ctrlKey || e.metaKey || e.altKey || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
   if (e.key === "0") { go(S.hub); return; }
   var n = parseInt(e.key, 10); if (n >= 1 && n <= 9 && S.tiles[n - 1]) go(S.tiles[n - 1].u);
 });
@@ -251,21 +611,24 @@ var standalone = matchMedia("(display-mode: standalone)").matches || navigator.s
 window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); deferred = e; installBtn.hidden = false; });
 installBtn.addEventListener("click", function(){ if (!deferred) return; deferred.prompt(); deferred.userChoice.finally(function(){ deferred = null; installBtn.hidden = true; }); });
 document.getElementById("installHint").textContent = standalone
-  ? "Läuft als installierte App. Tipp: Lange auf das App-Symbol drücken öffnet Hub, Obsidian oder Gmail direkt (Android)."
+  ? "Läuft als installierte App. Tipp (Android): Lange auf das App-Symbol drücken öffnet Hub, Termine, Obsidian oder Gmail direkt."
   : /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) && "ontouchend" in document
     ? "Auf iPad/iPhone installieren: In Safari auf „Teilen“ tippen, dann „Zum Home-Bildschirm“."
     : "Installieren: Im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen.";
 
 /* ---------- Start ---------- */
-render();
+function renderAll(){ tick(); renderCount(); renderTiles(); renderWeek(); renderAllList(); }
+renderAll();
+showTab(location.hash.slice(1));
 (function startup(){
   var q = new URLSearchParams(location.search), target = q.get("go");
   if (target) {
-    history.replaceState(null, "", location.pathname);
+    history.replaceState(null, "", location.pathname + location.hash);
     if (target === "hub") { go(S.hub); return; }
+    if (target === "termine") { showTab("termine"); return; }
     var t = S.tiles.filter(function(x){ return x.key === target; })[0]; if (t) { go(t.u); return; }
   }
-  if (S.auto) {
+  if (S.auto && !location.hash) {
     var left = 2, timer = setInterval(function(){
       left--; if (left <= 0) { clearInterval(timer); document.getElementById("toast").hidden = true; go(S.hub); }
       else document.getElementById("toastText").textContent = "Hub öffnet in " + left + " s …";

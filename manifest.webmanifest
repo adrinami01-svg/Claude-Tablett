@@ -1,7 +1,7 @@
 {
   "name": "Mein Hub",
   "short_name": "Hub",
-  "description": "Schnellzugriff auf meinen Hub und meine wichtigsten Seiten.",
+  "description": "Schnellzugriff auf meinen Hub, meine Termine und wichtigsten Seiten.",
   "lang": "de",
   "start_url": "./?source=pwa",
   "scope": "./",
@@ -10,13 +10,67 @@
   "background_color": "#F3F5F4",
   "theme_color": "#0E7C86",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "shortcuts": [
-    { "name": "Hub öffnen", "short_name": "Hub", "url": "./?go=hub", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Obsidian öffnen", "short_name": "Obsidian", "url": "./?go=obsidian", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Gmail öffnen", "short_name": "Gmail", "url": "./?go=gmail", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+    {
+      "name": "Hub öffnen",
+      "short_name": "Hub",
+      "url": "./?go=hub",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Termine",
+      "short_name": "Termine",
+      "url": "./?go=termine",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian öffnen",
+      "short_name": "Obsidian",
+      "url": "./?go=obsidian",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Gmail öffnen",
+      "short_name": "Gmail",
+      "url": "./?go=gmail",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }
