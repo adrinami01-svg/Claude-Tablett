@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Paper-Trading</title>
-<meta name="description" content="Paper-Trading-Bot mit Spielgeld: Regel-Strategien oder Claude als KI-Agent, mit Backtest.">
+<meta name="description" content="Paper-Trading-Bot mit Spielgeld für Krypto und Nasdaq-Aktien: Regel-Strategien oder Claude als KI-Agent, mit Backtest.">
 <meta name="theme-color" content="#0E7C86">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -111,7 +111,7 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
 
       <div class="card">
         <h2>Offene Positionen <small id="posCount"></small></h2>
-        <div class="tbl"><table><thead><tr><th>Coin</th><th>Einstieg</th><th>Kurs</th><th>Wert</th><th>G/V</th><th>Stop</th><th>Ziel</th><th></th></tr></thead>
+        <div class="tbl"><table><thead><tr><th>Wert</th><th>Einstieg</th><th>Kurs</th><th>Wert</th><th>G/V</th><th>Stop</th><th>Ziel</th><th></th></tr></thead>
         <tbody id="posBody"></tbody></table></div>
         <div class="empty" id="posEmpty">Keine offene Position.</div>
       </div>
@@ -119,7 +119,7 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
       <div class="card">
         <h2>Backtest <small>letzte 1000 Kerzen</small></h2>
         <div class="row">
-          <div><label for="btSym">Coin</label><select id="btSym"></select></div>
+          <div><label for="btSym">Wert</label><select id="btSym"></select></div>
           <div><label for="btStrat">Strategie</label><select id="btStrat"></select></div>
         </div>
         <button class="primary" id="btRun">Backtest starten</button>
@@ -140,7 +140,7 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
 
       <div class="card">
         <h2>Trades <small id="trCount"></small></h2>
-        <div class="tbl"><table><thead><tr><th>Zeit</th><th>Coin</th><th>Art</th><th>Preis</th><th>G/V</th><th>Grund</th></tr></thead>
+        <div class="tbl"><table><thead><tr><th>Zeit</th><th>Wert</th><th>Art</th><th>Preis</th><th>G/V</th><th>Grund</th></tr></thead>
         <tbody id="trBody"></tbody></table></div>
         <div class="empty" id="trEmpty">Noch keine Trades.</div>
         <div class="btns" style="margin-top:10px"><button id="csv">Als CSV sichern</button><button id="reset">Konto zurücksetzen</button></div>
@@ -152,7 +152,13 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
         <h2>Bot <small id="nextRun"></small></h2>
         <button class="primary big" id="toggle">▶ Bot starten</button>
         <div class="field"><label for="strat">Strategie</label><select id="strat"></select></div>
-        <label>Coins (gegen USDT)</label>
+        <div class="field"><label for="market">Markt</label>
+          <select id="market"><option value="crypto">Krypto (Binance, rund um die Uhr)</option><option value="stocks">Nasdaq-100-Aktien (US-Börse)</option></select></div>
+        <div id="stockBox" hidden>
+          <div class="field"><label for="tdKey">Twelve-Data-API-Key (kostenlos)</label><input id="tdKey" type="password" autocomplete="off" placeholder="Key von twelvedata.com"></div>
+          <div class="hint" style="margin:-6px 0 10px">Kostenlos: 800 Abrufe am Tag, 8 pro Minute. Der Bot ruft deshalb nur ab, wenn eine Kerze fertig ist, und außerhalb der Börsenzeit (15:30–22:00 Uhr deutscher Zeit) nur stündlich. Höchstens 8 Werte.</div>
+        </div>
+        <label id="symLabel">Coins (gegen USDT)</label>
         <div class="chips" id="syms"></div>
         <div class="row">
           <div><label for="interval">Kerzen</label>
@@ -211,17 +217,19 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
 "use strict";
 var KEY = "hub-papertrading-v1";
 var SYMBOLS = ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE", "LINK"];
+var STOCKS = ["QQQ", "AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "AVGO", "TSLA", "COST", "NFLX", "AMD"]; // QQQ = ETF auf den Nasdaq-100
+var TD_INT = { "5m": "5min", "15m": "15min", "1h": "1h", "4h": "4h", "1d": "1day" };
 var HOSTS = ["https://data-api.binance.vision", "https://api.binance.com"];
 var PRICES = { "claude-opus-5-5": [4, 20], "claude-sonnet-5-5": [2, 10], "claude-haiku-5-5": [0.10, 0.50] }; // $ je 1 Mio. Tokens (Ein/Aus)
 var MS = { "5m": 3e5, "15m": 9e5, "1h": 36e5, "4h": 144e5, "1d": 864e5 };
 
 function defaults(){
   return {
-    cfg: { strat: "sma", syms: ["BTC", "ETH"], interval: "15m", poll: 30, wake: false,
+    cfg: { strat: "sma", market: "crypto", syms: ["BTC", "ETH"], stockSyms: ["QQQ", "NVDA"], tdKey: "", interval: "15m", poll: 30, wake: false,
       capital: 10000, riskPct: 1, stopPct: 3, takePct: 6, maxPosPct: 25, feePct: 0.1, slipPct: 0.05,
       aiKey: "", aiModel: "claude-opus-5-5", aiEffort: "low", aiMax: 100 },
     acc: PT.newAccount(10000), created: Date.now(), running: false,
-    seen: {}, prices: {}, log: [], ai: { day: "", calls: 0, cost: 0, totalCost: 0, last: null }
+    seen: {}, prices: {}, nextFetch: {}, log: [], ai: { day: "", calls: 0, cost: 0, totalCost: 0, last: null }
   };
 }
 function load(){
@@ -263,6 +271,27 @@ async function klines(sym, interval, limit){
   throw new Error("Kursdaten nicht erreichbar (" + (last && last.message || "Netz") + ")");
 }
 
+/* Nasdaq-Aktien über Twelve Data (eigener kostenloser Key). Kerzenzeit = Beginn der Kerze, UTC. */
+async function stockCandles(sym, interval, limit){
+  if (!S.cfg.tdKey) throw new Error("Twelve-Data-Key fehlt");
+  var j = await getJSON("https://api.twelvedata.com/time_series?symbol=" + encodeURIComponent(sym) + "&interval=" + TD_INT[interval] +
+    "&outputsize=" + limit + "&timezone=UTC&order=asc&apikey=" + encodeURIComponent(S.cfg.tdKey));
+  if (j.status === "error" || !j.values) throw new Error(j.code === 429 ? "Abruf-Limit von Twelve Data erreicht" : (j.message || "Twelve Data: keine Daten"));
+  var ms = MS[interval];
+  return j.values.map(function(v){
+    var t = Date.parse(v.datetime.replace(" ", "T") + (v.datetime.length > 10 ? "Z" : "T00:00:00Z"));
+    return { t: t, o: +v.open, h: +v.high, l: +v.low, c: +v.close, v: +(v.volume || 0), ct: t + ms - 1 };
+  }).sort(function(a, b){ return a.t - b.t; });
+}
+function usOpen(d){ // Mo–Fr 9:30–16:00 New York (Feiertage nicht berücksichtigt)
+  var p = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", hour: "numeric", minute: "numeric", hourCycle: "h23" }).formatToParts(d || new Date());
+  var g = function(k){ return p.filter(function(x){ return x.type === k; })[0].value; }, m = +g("hour") * 60 + +g("minute");
+  return ["Sat", "Sun"].indexOf(g("weekday")) < 0 && m >= 570 && m < 960;
+}
+function candles(sym, interval, limit){ return S.cfg.market === "stocks" ? stockCandles(sym, interval, limit) : klines(sym, interval, limit); }
+function activeSyms(){ return S.cfg.market === "stocks" ? S.cfg.stockSyms : S.cfg.syms; }
+function symName(sym){ return S.cfg.market === "stocks" || STOCKS.indexOf(sym) >= 0 ? sym + " (Nasdaq, USD)" : sym + "/USDT"; }
+
 /* ---------- KI-Agent ---------- */
 var AI_SCHEMA = { type: "object", additionalProperties: false,
   required: ["action", "size_pct", "stop_pct", "take_pct", "confidence", "reason"],
@@ -275,7 +304,8 @@ var AI_SCHEMA = { type: "object", additionalProperties: false,
     reason: { type: "string", description: "Begründung auf Deutsch, höchstens 2 Sätze" }
   } };
 var AI_SYSTEM = [
-  "Du bist der Entscheider eines Krypto-Trading-Bots in einer Paper-Trading-Simulation: Spot-Handel gegen USDT, nur Long, Spielgeld. Du wirst einmal pro neu geschlossener Kerze und Coin gefragt und gibst eine Entscheidung als JSON zurück.",
+  "Du bist der Entscheider eines Trading-Bots in einer Paper-Trading-Simulation: Kryptowährungen gegen USDT oder US-Aktien aus dem Nasdaq-100, nur Long, Spielgeld. Du wirst einmal pro neu geschlossener Kerze und Wert gefragt und gibst eine Entscheidung als JSON zurück.",
+  "Bei Aktien wird nur zu Börsenzeiten gehandelt; über Nacht und am Wochenende kann der Kurs mit einer Lücke öffnen, die über den Stop springt. Plane Stops bei Aktien etwas weiter und kaufe kurz vor Börsenschluss nur mit gutem Grund. QQQ ist ein ETF auf den ganzen Nasdaq-100 und schwankt weniger als Einzelaktien.",
   "",
   "Ziel: über viele Entscheidungen hinweg nach Kosten besser abschneiden als einfaches Halten, mit kleinen Rückgängen. Ein einzelner verpasster Trade kostet nichts; ein schlechter Trade kostet Geld. Deshalb ist hold die Standardantwort, und du handelst nur, wenn mehrere Signale in dieselbe Richtung zeigen.",
   "",
@@ -309,7 +339,7 @@ function aiSummary(sym, closed, price, pos){
   var r4 = function(v){ return v == null ? null : +v.toPrecision(6); };
   var eq = PT.equityOf(S.acc, S.prices);
   return {
-    coin: sym + "/USDT", kerzen_intervall: S.cfg.interval, aktueller_kurs: r4(price),
+    wert: symName(sym), markt: S.cfg.market === "stocks" ? "US-Aktie, Börse " + (usOpen() ? "offen" : "geschlossen") : "Krypto, rund um die Uhr", kerzen_intervall: S.cfg.interval, aktueller_kurs: r4(price),
     indikatoren: { sma20: r4(s20), sma50: r4(s50), sma200: r4(s200), rsi14: r == null ? null : +r.toFixed(1), atr_pct: +atrPct.toFixed(2),
       veraenderung_20_kerzen_pct: +((cl[i] / cl[Math.max(0, i - 20)] - 1) * 100).toFixed(2),
       veraenderung_100_kerzen_pct: +((cl[i] / cl[Math.max(0, i - 100)] - 1) * 100).toFixed(2) },
@@ -362,12 +392,19 @@ var timer = null, busy = false, nextAt = 0, lastErr = "";
 async function step(){
   if (busy) return; busy = true;
   var c = S.cfg, o = opts(), errs = [];
-  for (var n = 0; n < c.syms.length; n++) {
-    var sym = c.syms[n];
+  var list = activeSyms(), stocks = c.market === "stocks"; var closedNote = false;
+  for (var n = 0; n < list.length; n++) {
+    var sym = list[n], fk = sym + "|" + c.interval;
+    if (stocks && S.nextFetch[fk] && Date.now() < S.nextFetch[fk]) continue;
     try {
-      var ks = await klines(sym, c.interval, 300), now = Date.now();
+      var ks = await candles(sym, c.interval, 300), now = Date.now();
+      if (stocks) { // nächster Abruf erst, wenn die laufende Kerze fertig ist; bei geschlossener Börse stündlich
+        var lk = ks[ks.length - 1];
+        S.nextFetch[fk] = !usOpen() ? now + 36e5 : lk.ct > now ? Math.max(now + 60e3, lk.ct + 20e3) : now + 5 * 60e3; // ohne laufende Kerze (z. B. Feiertag) alle 5 min
+      }
       var price = ks[ks.length - 1].c, closed = ks.filter(function(k){ return k.ct < now; });
       S.prices[sym] = price;
+      if (stocks && !usOpen()) { closedNote = true; continue; } // Aktien: außerhalb der Börsenzeit weder Stops noch Signale
       // 1) Stop-Loss / Gewinnziel gegen den aktuellen Kurs
       var ex = PT.checkExits(S.acc, sym, { t: now, o: price, h: price, l: price, c: price }, o);
       if (ex) log(sym + ": " + ex.reason + " verkauft zu " + px(ex.price) + " (" + pct(ex.pnlPct) + ")");
@@ -389,6 +426,8 @@ async function step(){
       } else if (c.strat === "ai") log(sym + ": KI hält – " + sig.reason);
     } catch (e) { errs.push(sym + ": " + e.message); }
   }
+  if (closedNote && !S.closedLogged) { log("US-Börse geschlossen – Kurse werden stündlich aktualisiert, gehandelt wird ab 15:30 Uhr."); S.closedLogged = true; }
+  if (stocks && usOpen()) S.closedLogged = false;
   var eq = PT.equityOf(S.acc, S.prices), pts = S.acc.equity;
   pts.push({ t: Date.now(), v: eq });
   if (pts.length > 1500) S.acc.equity = pts.filter(function(_, i){ return i % 2 === 0 || i > pts.length - 200; });
@@ -403,9 +442,11 @@ function schedule(){
   timer = setTimeout(async function(){ await step(); schedule(); }, S.cfg.poll * 1000);
 }
 async function start(){
-  if (!S.cfg.syms.length) { alert("Bitte mindestens einen Coin auswählen."); return; }
+  if (!activeSyms().length) { alert("Bitte mindestens einen Wert auswählen."); return; }
+  if (S.cfg.market === "stocks" && !S.cfg.tdKey) { alert("Für Nasdaq-Aktien bitte zuerst einen kostenlosen Twelve-Data-Key eintragen."); return; }
+  S.nextFetch = {};
   if (S.cfg.strat === "ai" && !S.cfg.aiKey) { alert("Für den KI-Agenten bitte zuerst einen API-Key eintragen."); return; }
-  S.running = true; log("Bot gestartet: " + stratName(S.cfg.strat) + ", " + S.cfg.syms.join(", ") + ", Kerzen " + S.cfg.interval);
+  S.running = true; log("Bot gestartet: " + stratName(S.cfg.strat) + ", " + activeSyms().join(", ") + ", Kerzen " + S.cfg.interval);
   save(); render(); wake(); await step(); schedule();
 }
 function stop(){ S.running = false; clearTimeout(timer); log("Bot gestoppt."); save(); render(); wake(); }
@@ -516,10 +557,15 @@ function fillForm(){
   st.appendChild(new Option("KI-Agent (Claude entscheidet)", "ai"));
   st.value = c.strat; bs.value = c.strat === "ai" ? "sma" : c.strat;
   sy.textContent = ""; bsym.textContent = "";
-  SYMBOLS.forEach(function(s){
-    var lb = el("label"), cb = el("input"); cb.type = "checkbox"; cb.value = s; cb.checked = c.syms.indexOf(s) >= 0;
+  var stocks = c.market === "stocks", all = stocks ? STOCKS : SYMBOLS, prop = stocks ? "stockSyms" : "syms";
+  $("market").value = c.market; $("stockBox").hidden = !stocks; $("tdKey").value = c.tdKey;
+  $("symLabel").textContent = stocks ? "Aktien (QQQ = ganzer Nasdaq-100)" : "Coins (gegen USDT)";
+  all.forEach(function(s){
+    var lb = el("label"), cb = el("input"); cb.type = "checkbox"; cb.value = s; cb.checked = c[prop].indexOf(s) >= 0;
     cb.addEventListener("change", function(){
-      c.syms = SYMBOLS.filter(function(x){ return sy.querySelector('input[value="' + x + '"]').checked; }); save();
+      var sel = all.filter(function(x){ return sy.querySelector('input[value="' + x + '"]').checked; });
+      if (stocks && sel.length > 8) { cb.checked = false; alert("Höchstens 8 Aktien – sonst reicht das kostenlose Abruf-Limit nicht."); return; }
+      c[prop] = sel; save();
     });
     lb.appendChild(cb); lb.append(s); sy.appendChild(lb); bsym.appendChild(new Option(s, s));
   });
@@ -539,6 +585,11 @@ $("strat").addEventListener("change", function(){
   if (S.running) log("Strategie gewechselt: " + stratName(S.cfg.strat));
   save(); render();
 });
+$("market").addEventListener("change", function(){
+  if (S.running) stop();
+  S.cfg.market = this.value; save(); fillForm(); render();
+});
+$("tdKey").addEventListener("change", function(){ S.cfg.tdKey = this.value.trim(); save(); });
 $("wake").addEventListener("change", function(){ S.cfg.wake = this.checked; save(); wake(); });
 $("toggle").addEventListener("click", function(){ S.running ? stop() : start(); });
 $("reset").addEventListener("click", function(){
@@ -557,7 +608,7 @@ $("csv").addEventListener("click", function(){
 $("btRun").addEventListener("click", async function(){
   var b = this, sym = $("btSym").value, st = $("btStrat").value; b.disabled = true; b.textContent = "Lädt Kurse …"; $("btErr").textContent = "";
   try {
-    var ks = await klines(sym, S.cfg.interval, 1000), now = Date.now();
+    var ks = await candles(sym, S.cfg.interval, 1000), now = Date.now();
     ks = ks.filter(function(k){ return k.ct < now; });
     var r = PT.backtest(ks, st, opts(), 10000), s = r.stats;
     $("btOut").hidden = false;
