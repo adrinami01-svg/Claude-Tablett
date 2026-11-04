@@ -274,26 +274,50 @@ var AI_SCHEMA = { type: "object", additionalProperties: false,
     confidence: { type: "number", description: "0-1" },
     reason: { type: "string", description: "Begründung auf Deutsch, höchstens 2 Sätze" }
   } };
-var AI_SYSTEM = "Du bist ein disziplinierter Trading-Agent in einer Paper-Trading-Simulation (Spot, nur Long, Spielgeld). " +
-  "Du bekommst Kursdaten, Indikatoren und den Kontostand für einen Coin und entscheidest: buy (nur ohne offene Position), sell (nur mit offener Position) oder hold. " +
-  "Handle nur bei klarem Vorteil; im Zweifel hold. Gebühren und Schlupf kosten bei jedem Trade, Hin-und-her-Handeln verliert Geld. " +
-  "Die Simulation begrenzt Positionsgröße und Risiko unabhängig von deiner Antwort.";
+var AI_SYSTEM = [
+  "Du bist der Entscheider eines Krypto-Trading-Bots in einer Paper-Trading-Simulation: Spot-Handel gegen USDT, nur Long, Spielgeld. Du wirst einmal pro neu geschlossener Kerze und Coin gefragt und gibst eine Entscheidung als JSON zurück.",
+  "",
+  "Ziel: über viele Entscheidungen hinweg nach Kosten besser abschneiden als einfaches Halten, mit kleinen Rückgängen. Ein einzelner verpasster Trade kostet nichts; ein schlechter Trade kostet Geld. Deshalb ist hold die Standardantwort, und du handelst nur, wenn mehrere Signale in dieselbe Richtung zeigen.",
+  "",
+  "Kosten: Jeder Kauf und Verkauf kostet Gebühr plus Schlupf, ein Hin und Zurück zusammen etwa das Doppelte von (gebuehr_pct + schlupf_pct). Ein Trade lohnt sich nur, wenn die erwartete Bewegung deutlich größer ist. Häufiges Hin-und-her-Handeln ist der häufigste Grund, warum solche Bots verlieren.",
+  "",
+  "So liest du die Daten:",
+  "- trend: Kurs über sma50 und sma50 über sma200 = Aufwärtstrend; umgekehrt = Abwärtstrend; dazwischen = Seitwärts. Kaufe bevorzugt im Aufwärtstrend und fast nie im klaren Abwärtstrend.",
+  "- rsi14: unter 30 überverkauft, über 70 überkauft. Im Aufwärtstrend sind Rücksetzer mit RSI 35-45 oft bessere Einstiege als Ausbrüche bei RSI über 70.",
+  "- atr_pct: typische Schwankung einer Kerze in Prozent. Setze stop_pct grob auf das 1,5- bis 3-Fache davon, damit normales Rauschen den Stop nicht auslöst.",
+  "- letzte_40_kerzen_ohlc: [open, high, low, close], älteste zuerst. Achte auf höhere Tiefs, Unterstützungen und Ausbrüche aus Seitwärtsphasen.",
+  "- position: ist sie null, darfst du nur buy oder hold antworten; ist sie gesetzt, nur sell oder hold. Stop und Ziel laufen automatisch, du musst sie nicht selbst auslösen.",
+  "- letzte_trades_dieses_coins: Hast du hier gerade mit Verlust verkauft, kaufe nicht sofort wieder, ohne dass sich die Lage klar geändert hat.",
+  "",
+  "Verkaufen (sell) bei offener Position, wenn der Grund für den Kauf weggefallen ist: Trend gebrochen (Schluss klar unter sma50), deutliche Schwäche nach starkem Anstieg, oder die Position läuft seit vielen Kerzen seitwärts und bindet Geld. Verkaufe nicht nur, weil sie leicht im Minus ist – dafür gibt es den Stop.",
+  "",
+  "Felder deiner Antwort:",
+  "- size_pct (0-100): Anteil der von den Risiko-Regeln erlaubten Maximalgröße. 100 nur bei sehr klarer Lage, sonst 30-70. Bei hold und sell egal (0).",
+  "- stop_pct: Abstand des Stop-Loss unter dem Einstieg in Prozent (erlaubt 0,5-15). Ohne guten Grund nimm regeln.standard_stop_pct.",
+  "- take_pct: Gewinnziel in Prozent (0 = keins, dann entscheidest du später über den Ausstieg). Wenn gesetzt, mindestens das 1,5-Fache von stop_pct.",
+  "- confidence (0-1): ehrlich kalibriert. 0,5 = Münzwurf. Kaufe nicht unter 0,6.",
+  "- reason: höchstens zwei kurze Sätze auf Deutsch mit den konkreten Signalen (z. B. \"Aufwärtstrend, RSI dreht von 38 nach oben, Stop unter letztem Tief\").",
+  "",
+  "Die Simulation deckelt Positionsgröße, Risiko und Stop-Spanne unabhängig von deiner Antwort. Du kannst also nichts kaputt machen – aber jede unnötige Order kostet Gebühren."
+].join("\n");
 
 function aiSummary(sym, closed, price, pos){
   var cl = closed.map(function(k){ return k.c; }), i = cl.length - 1;
   var s20 = PT.sma(cl, 20)[i], s50 = PT.sma(cl, 50)[i], s200 = PT.sma(cl, 200)[i], r = PT.rsi(cl, 14)[i];
+  var tr = closed.slice(-15).map(function(k, j, a){ return j ? Math.max(k.h - k.l, Math.abs(k.h - a[j - 1].c), Math.abs(k.l - a[j - 1].c)) : k.h - k.l; }).slice(1);
+  var atrPct = tr.reduce(function(x, y){ return x + y; }, 0) / tr.length / cl[i] * 100;
   var r4 = function(v){ return v == null ? null : +v.toPrecision(6); };
   var eq = PT.equityOf(S.acc, S.prices);
   return {
     coin: sym + "/USDT", kerzen_intervall: S.cfg.interval, aktueller_kurs: r4(price),
-    indikatoren: { sma20: r4(s20), sma50: r4(s50), sma200: r4(s200), rsi14: r == null ? null : +r.toFixed(1),
+    indikatoren: { sma20: r4(s20), sma50: r4(s50), sma200: r4(s200), rsi14: r == null ? null : +r.toFixed(1), atr_pct: +atrPct.toFixed(2),
       veraenderung_20_kerzen_pct: +((cl[i] / cl[Math.max(0, i - 20)] - 1) * 100).toFixed(2),
       veraenderung_100_kerzen_pct: +((cl[i] / cl[Math.max(0, i - 100)] - 1) * 100).toFixed(2) },
     letzte_40_kerzen_ohlc: closed.slice(-40).map(function(k){ return [r4(k.o), r4(k.h), r4(k.l), r4(k.c)]; }),
     position: pos ? { einstieg: r4(pos.entry), gv_pct: +((price / pos.entry - 1) * 100).toFixed(2), stop: r4(pos.stop), ziel: r4(pos.take),
       offen_seit_kerzen: Math.round((Date.now() - pos.t) / MS[S.cfg.interval]) } : null,
     konto: { wert_usdt: Math.round(eq), bargeld_usdt: Math.round(S.acc.cash), offene_positionen: Object.keys(S.acc.pos).length },
-    regeln: { standard_stop_pct: +S.cfg.stopPct, standard_ziel_pct: +S.cfg.takePct, gebuehr_pct: +S.cfg.feePct },
+    regeln: { standard_stop_pct: +S.cfg.stopPct, standard_ziel_pct: +S.cfg.takePct, gebuehr_pct: +S.cfg.feePct, schlupf_pct: +S.cfg.slipPct },
     letzte_trades_dieses_coins: S.acc.trades.filter(function(t){ return t.sym === sym; }).slice(-4)
       .map(function(t){ return { art: t.side, preis: r4(t.price), gv_pct: t.pnlPct == null ? null : +t.pnlPct.toFixed(2), grund: t.reason }; })
   };
@@ -328,6 +352,7 @@ async function aiDecide(sym, closed, price, pos){
   var out = { action: ["buy", "sell", "hold"].indexOf(d.action) >= 0 ? d.action : "hold",
     sizePct: clamp(d.size_pct, 0, 100, 100), stopPct: clamp(d.stop_pct, 0.5, 15, +c.stopPct),
     takePct: clamp(d.take_pct, 0, 50, +c.takePct), confidence: clamp(d.confidence, 0, 1, 0), reason: String(d.reason || "").slice(0, 300) };
+  if (out.action === "buy" && out.confidence < 0.6) { out.action = "hold"; out.reason = "Kauf verworfen (Sicherheit unter 60 %): " + out.reason; }
   S.ai.last = { t: Date.now(), sym: sym, d: out, cost: cost };
   return out;
 }
