@@ -1,6 +1,6 @@
 // Service Worker: hält die Startseite offline verfügbar.
-const CACHE = "hub-launcher-v3";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon.svg",
+const CACHE = "hub-launcher-v4";
+const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./trading.html", "./trading-engine.js", "./icons/icon.svg",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {

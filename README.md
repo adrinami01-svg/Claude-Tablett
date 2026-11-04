@@ -12,6 +12,7 @@ Eine kleine App (PWA), mit der du deinen **Mein Hub** (Claude-Artifact) mit eine
 - **Noten**: Noten pro Fach/CE mit Gewichtung, Durchschnitt pro Fach und gesamt.
 - **Wetter** für heute und morgen (Open-Meteo, ohne Anmeldung) mit Schirm-Hinweis.
 - **Gewohnheiten** zum Abhaken mit 7-Tage-Verlauf und Serie 🔥.
+- **Paper-Trading-Bot** (`trading.html`, Link „📈 Paper-Trading“ in der Tab-Leiste): handelt Krypto mit Spielgeld auf echten Binance-Kursen (BTC, ETH, SOL …). Strategien: Trendfolge (SMA 20/50), Rücksetzer kaufen (RSI), Ausbruch (Donchian) oder **KI-Agent**, bei dem Claude pro neuer Kerze kaufen/verkaufen/halten entscheidet (eigener API-Key nötig, Tageslimit einstellbar). Stop-Loss, Gewinnziel, Risiko je Trade, Gebühren und Schlupf werden simuliert. Mit **Backtest** über die letzten 1000 Kerzen im Vergleich zu „nur halten“, Trade-Liste als CSV. Läuft nur, solange die Seite offen ist (Option „Bildschirm anlassen“).
 - **Komplett-Sicherung** aller Daten in eine Datei und Wiederherstellen.
 - **Schnellzugriff-Kacheln**: Obsidian (Vault & Inbox), Gmail, Kalender, Claude – frei anpassbar (Bearbeiten → hinzufügen, verschieben, entfernen).
 - **Auto-Start** (optional, in den Einstellungen): öffnet beim Start nach 2 Sekunden direkt den Hub, mit „Abbrechen“.

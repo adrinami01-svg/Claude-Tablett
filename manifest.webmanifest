@@ -51,6 +51,17 @@
       ]
     },
     {
+      "name": "Paper-Trading",
+      "short_name": "Trading",
+      "url": "./trading.html",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
       "name": "Obsidian öffnen",
       "short_name": "Obsidian",
       "url": "./?go=obsidian",

@@ -106,6 +106,7 @@ textarea{min-height:120px;resize:vertical;display:block}
 .toast button{min-height:36px;padding:6px 12px;background:var(--bg);color:var(--ink);border-color:var(--bg)}
 nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 0;overflow-x:auto;scrollbar-width:none}
 nav.tabs button{background:transparent;border:none;border-bottom:3px solid transparent;border-radius:0;color:var(--muted);padding:10px 14px;white-space:nowrap}
+nav.tabs .tablink{margin-left:auto;color:var(--accent);font-weight:600;text-decoration:none;padding:10px 14px;white-space:nowrap;display:flex;align-items:center}
 nav.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
 .wx{display:flex;align-items:center;gap:14px}
 .wx .big{font-size:40px;line-height:1}
@@ -159,6 +160,7 @@ details summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6px 0
     <button type="button" role="tab" data-tab="lernen">Lernkarten</button>
     <button type="button" role="tab" data-tab="noten">Noten</button>
     <button type="button" role="tab" data-tab="einst">Einstellungen</button>
+    <a class="tablink" href="trading.html">📈 Paper-Trading</a>
   </nav>
 
   <!-- Übersicht -->
@@ -1020,6 +1022,7 @@ wxFetch(false);
     history.replaceState(null, "", location.pathname + location.hash);
     if (target === "hub") { go(S.hub); return; }
     if (target === "termine") { showTab("termine"); return; }
+    if (target === "trading") { location.href = "trading.html"; return; }
     var t = S.tiles.filter(function(x){ return x.key === target; })[0]; if (t) { go(t.u); return; }
   }
   if (S.auto && !location.hash) {

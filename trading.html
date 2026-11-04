@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paper-Trading</title>
+<meta name="description" content="Paper-Trading-Bot mit Spielgeld: Regel-Strategien oder Claude als KI-Agent, mit Backtest.">
+<meta name="theme-color" content="#0E7C86">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root{
+  --bg:#F3F5F4;--surface:#FFFFFF;--ink:#18262B;--muted:#5C6B70;--line:#DDE3E2;
+  --accent:#0E7C86;--accent-ink:#FFFFFF;--accent-soft:#DCEFF0;
+  --up:#1E7B3C;--up-soft:#DDF1E3;--crit:#B3261E;--crit-soft:#F8DEDB;--warn:#B7650A;--warn-soft:#FBEBD5;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0F1A1D;--surface:#17262A;--ink:#E7EFEE;--muted:#93A6AA;--line:#2A3C41;
+  --accent:#4FC3CC;--accent-ink:#0F1A1D;--accent-soft:#16363B;
+  --up:#6BD58E;--up-soft:#183626;--crit:#F2877F;--crit-soft:#3C1E1B;--warn:#F0A646;--warn-soft:#3A2B14;color-scheme:dark}}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:8px}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+header a{color:var(--accent);text-decoration:none;font-weight:600}
+h1{font-size:28px;line-height:1.15}
+h2{font-size:18px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+h2 small{font-size:13px;color:var(--muted);font-weight:400}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:14px;font-weight:600;background:var(--line);color:var(--muted)}
+.pill.on{background:var(--up-soft);color:var(--up)}
+.pill.err{background:var(--crit-soft);color:var(--crit)}
+.pill i{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+.cols{display:grid;grid-template-columns:3fr 2fr;gap:16px;align-items:start}
+.col{display:grid;gap:16px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}
+.note{background:var(--warn-soft);color:var(--ink);border-left:4px solid var(--warn);border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.kpi{background:var(--bg);border-radius:12px;padding:10px 12px;min-width:0}
+.kpi .l{font-size:12px;color:var(--muted)}
+.kpi .s{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.kpi .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.up{color:var(--up)} .down{color:var(--crit)}
+canvas{width:100%;height:180px;display:block}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:4px;flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle;background:var(--c)}
+.tbl{width:100%;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:7px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:12px;color:var(--muted);font-weight:600}
+td.why{text-align:left;white-space:normal;color:var(--muted);font-size:13px;min-width:140px}
+.empty{color:var(--muted);font-size:14px;padding:8px 0}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+input,select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-height:44px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.field{margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chips label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--ink);font-size:14px;cursor:pointer;min-height:40px}
+.chips input{width:auto;min-height:0;accent-color:var(--accent)}
+.chips label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+button{font:inherit;font-weight:600;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 14px;min-height:44px;cursor:pointer;touch-action:manipulation}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.stop{background:var(--crit);color:#fff;border-color:var(--crit)}
+button.small{padding:5px 10px;min-height:34px;font-size:13px}
+button:disabled{opacity:.5;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.big{width:100%;font-size:18px;min-height:56px;margin-bottom:10px}
+.meta{font-size:13px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:600}
+.err{color:var(--crit);font-size:14px;margin-top:6px}
+.ai-box{background:var(--bg);border-radius:12px;padding:10px 12px;font-size:14px;margin-top:8px}
+.log{max-height:240px;overflow:auto;font-size:13px;font-variant-numeric:tabular-nums}
+.log div{padding:3px 0;border-bottom:1px dashed var(--line)}
+.log time{color:var(--muted);margin-right:6px}
+details summary{cursor:pointer;font-weight:600;padding:4px 0}
+.hint{font-size:12px;color:var(--muted);margin-top:4px}
+[hidden]{display:none!important}
+@media (max-width:820px){.cols{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:420px){.row3{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><a href="./">← Hub</a><h1>Paper-Trading</h1></div>
+    <span class="pill" id="status"><i></i><span id="statusText">gestoppt</span></span>
+  </header>
+
+  <div class="note">Nur Spielgeld – es wird nie echtes Geld bewegt. Der Bot arbeitet nur, <b>solange diese Seite offen ist</b>. Ein Backtest-Gewinn ist kein Versprechen für die Zukunft.</div>
+
+  <div class="cols">
+    <div class="col">
+      <div class="card">
+        <h2>Konto <small id="accSince"></small></h2>
+        <div class="kpis">
+          <div class="kpi"><div class="l">Kontowert</div><div class="v" id="kEq">–</div></div>
+          <div class="kpi"><div class="l">Gewinn / Verlust</div><div class="v" id="kPnl">–</div><div class="s" id="kPnlPct"></div></div>
+          <div class="kpi"><div class="l">Bargeld</div><div class="v" id="kCash">–</div></div>
+          <div class="kpi"><div class="l">Trades · Trefferquote</div><div class="v" id="kTr">–</div></div>
+        </div>
+        <canvas id="eqChart" aria-label="Verlauf Kontowert"></canvas>
+        <div class="legend"><span style="--c:var(--accent)">Kontowert</span></div>
+      </div>
+
+      <div class="card">
+        <h2>Offene Positionen <small id="posCount"></small></h2>
+        <div class="tbl"><table><thead><tr><th>Coin</th><th>Einstieg</th><th>Kurs</th><th>Wert</th><th>G/V</th><th>Stop</th><th>Ziel</th><th></th></tr></thead>
+        <tbody id="posBody"></tbody></table></div>
+        <div class="empty" id="posEmpty">Keine offene Position.</div>
+      </div>
+
+      <div class="card">
+        <h2>Backtest <small>letzte 1000 Kerzen</small></h2>
+        <div class="row">
+          <div><label for="btSym">Coin</label><select id="btSym"></select></div>
+          <div><label for="btStrat">Strategie</label><select id="btStrat"></select></div>
+        </div>
+        <button class="primary" id="btRun">Backtest starten</button>
+        <div class="hint">Nutzt Kerzen-Intervall und Risiko-Einstellungen von rechts. Der KI-Agent ist nicht backtestbar (würde pro Kerze API-Kosten erzeugen).</div>
+        <div id="btOut" hidden>
+          <div class="kpis" style="margin-top:12px">
+            <div class="kpi"><div class="l">Strategie</div><div class="v" id="btRet"></div></div>
+            <div class="kpi"><div class="l">Nur halten</div><div class="v" id="btBh"></div></div>
+            <div class="kpi"><div class="l">Max. Rückgang</div><div class="v" id="btDd"></div></div>
+            <div class="kpi"><div class="l">Trades · Treffer</div><div class="v" id="btTr"></div></div>
+          </div>
+          <canvas id="btChart" aria-label="Backtest-Verlauf"></canvas>
+          <div class="legend"><span style="--c:var(--accent)">Strategie</span><span style="--c:var(--muted)">Nur halten</span></div>
+          <div class="meta" id="btMeta" style="margin-top:6px"></div>
+        </div>
+        <div class="err" id="btErr"></div>
+      </div>
+
+      <div class="card">
+        <h2>Trades <small id="trCount"></small></h2>
+        <div class="tbl"><table><thead><tr><th>Zeit</th><th>Coin</th><th>Art</th><th>Preis</th><th>G/V</th><th>Grund</th></tr></thead>
+        <tbody id="trBody"></tbody></table></div>
+        <div class="empty" id="trEmpty">Noch keine Trades.</div>
+        <div class="btns" style="margin-top:10px"><button id="csv">Als CSV sichern</button><button id="reset">Konto zurücksetzen</button></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card">
+        <h2>Bot <small id="nextRun"></small></h2>
+        <button class="primary big" id="toggle">▶ Bot starten</button>
+        <div class="field"><label for="strat">Strategie</label><select id="strat"></select></div>
+        <label>Coins (gegen USDT)</label>
+        <div class="chips" id="syms"></div>
+        <div class="row">
+          <div><label for="interval">Kerzen</label>
+            <select id="interval"><option value="5m">5 Minuten</option><option value="15m">15 Minuten</option><option value="1h">1 Stunde</option><option value="4h">4 Stunden</option><option value="1d">1 Tag</option></select></div>
+          <div><label for="poll">Prüfen alle</label>
+            <select id="poll"><option value="15">15 s</option><option value="30">30 s</option><option value="60">1 min</option><option value="300">5 min</option></select></div>
+        </div>
+        <div class="chips"><label><input type="checkbox" id="wake"> Bildschirm anlassen</label></div>
+        <div class="meta" id="lastRun">Noch nicht gelaufen.</div>
+        <div class="err" id="runErr"></div>
+      </div>
+
+      <div class="card" id="aiCard">
+        <h2>KI-Agent (Claude) <small id="aiUsage"></small></h2>
+        <div class="field"><label for="aiKey">Anthropic API-Key</label><input id="aiKey" type="password" autocomplete="off" placeholder="sk-ant-…"></div>
+        <div class="hint" style="margin:-6px 0 10px">Bleibt nur in diesem Browser gespeichert. Nimm einen eigenen Key mit niedrigem Ausgabelimit (console.anthropic.com).</div>
+        <div class="row">
+          <div><label for="aiModel">Modell</label>
+            <select id="aiModel"><option value="claude-opus-5-5">Opus 5.5 (klug, teurer)</option><option value="claude-sonnet-5-5">Sonnet 5.5 (Mitte)</option><option value="claude-haiku-5-5">Haiku 5.5 (sehr günstig)</option></select></div>
+          <div><label for="aiEffort">Denktiefe</label>
+            <select id="aiEffort"><option value="low">niedrig</option><option value="medium">mittel</option><option value="high">hoch</option></select></div>
+        </div>
+        <div class="field"><label for="aiMax">Max. Anfragen pro Tag</label><input id="aiMax" type="number" min="1" max="2000" step="1"></div>
+        <div class="hint">Der Agent wird nur einmal pro neuer Kerze und Coin gefragt. Stop-Loss, Ziel und Positionsgröße bleiben durch die Risiko-Regeln gedeckelt.</div>
+        <div class="ai-box" id="aiLast" hidden></div>
+      </div>
+
+      <div class="card">
+        <h2>Risiko &amp; Konto</h2>
+        <div class="row">
+          <div><label for="capital">Startkapital (USDT)</label><input id="capital" type="number" min="100" step="100"></div>
+          <div><label for="riskPct">Risiko je Trade %</label><input id="riskPct" type="number" min="0.1" max="10" step="0.1"></div>
+        </div>
+        <div class="row3">
+          <div><label for="stopPct">Stop-Loss %</label><input id="stopPct" type="number" min="0.2" max="50" step="0.1"></div>
+          <div><label for="takePct">Gewinnziel %</label><input id="takePct" type="number" min="0" max="200" step="0.5"></div>
+          <div><label for="maxPosPct">Max. je Coin %</label><input id="maxPosPct" type="number" min="1" max="100" step="1"></div>
+        </div>
+        <div class="row">
+          <div><label for="feePct">Gebühr %</label><input id="feePct" type="number" min="0" max="1" step="0.01"></div>
+          <div><label for="slipPct">Schlupf %</label><input id="slipPct" type="number" min="0" max="1" step="0.01"></div>
+        </div>
+        <div class="hint">Gewinnziel 0 = kein festes Ziel. Startkapital wirkt erst nach „Konto zurücksetzen“.</div>
+      </div>
+
+      <div class="card">
+        <h2>Protokoll</h2>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="trading-engine.js"></script>
+<script>
+"use strict";
+var KEY = "hub-papertrading-v1";
+var SYMBOLS = ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE", "LINK"];
+var HOSTS = ["https://data-api.binance.vision", "https://api.binance.com"];
+var PRICES = { "claude-opus-5-5": [4, 20], "claude-sonnet-5-5": [2, 10], "claude-haiku-5-5": [0.10, 0.50] }; // $ je 1 Mio. Tokens (Ein/Aus)
+var MS = { "5m": 3e5, "15m": 9e5, "1h": 36e5, "4h": 144e5, "1d": 864e5 };
+
+function defaults(){
+  return {
+    cfg: { strat: "sma", syms: ["BTC", "ETH"], interval: "15m", poll: 30, wake: false,
+      capital: 10000, riskPct: 1, stopPct: 3, takePct: 6, maxPosPct: 25, feePct: 0.1, slipPct: 0.05,
+      aiKey: "", aiModel: "claude-opus-5-5", aiEffort: "low", aiMax: 100 },
+    acc: PT.newAccount(10000), created: Date.now(), running: false,
+    seen: {}, prices: {}, log: [], ai: { day: "", calls: 0, cost: 0, totalCost: 0, last: null }
+  };
+}
+function load(){
+  try { var s = JSON.parse(localStorage.getItem(KEY)); if (s && s.acc) { var d = defaults(); s.cfg = Object.assign(d.cfg, s.cfg); s.ai = Object.assign(d.ai, s.ai); return Object.assign(d, s); } } catch (e) {}
+  return defaults();
+}
+var S = load();
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+/* ---------- Helfer ---------- */
+var $ = function(id){ return document.getElementById(id); };
+function el(tag, cls, txt){ var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+function usd(v, d){ return v == null || !isFinite(v) ? "–" : v.toLocaleString("de-DE", { minimumFractionDigits: d == null ? 2 : d, maximumFractionDigits: d == null ? 2 : d }) + " $"; }
+function px(v){ if (v == null) return "–"; var d = v >= 1000 ? 2 : v >= 1 ? 3 : 5; return v.toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function pct(v){ return !isFinite(v) ? "–" : (v > 0 ? "+" : "") + v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " %"; }
+function num(v, d){ return (+v).toLocaleString("de-DE", d == null ? { maximumFractionDigits: 2 } : { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function cls(v){ return v > 0 ? "up" : v < 0 ? "down" : ""; }
+function ts(t){ var d = new Date(t); return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }) + " " + d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }); }
+function opts(){ var c = S.cfg; return { feePct: +c.feePct, slipPct: +c.slipPct, riskPct: +c.riskPct, stopPct: +c.stopPct, takePct: +c.takePct, maxPosPct: +c.maxPosPct }; }
+function log(msg){ S.log.unshift({ t: Date.now(), m: msg }); if (S.log.length > 200) S.log.length = 200; renderLog(); }
+function today(){ var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+
+/* ---------- Marktdaten (Binance, öffentlich, ohne Anmeldung) ---------- */
+async function getJSON(url, ms){
+  var ctl = new AbortController(), timer = setTimeout(function(){ ctl.abort(); }, ms || 12000);
+  try { var r = await fetch(url, { signal: ctl.signal }); if (!r.ok) throw new Error("HTTP " + r.status); return await r.json(); }
+  finally { clearTimeout(timer); }
+}
+var hostIdx = 0;
+async function klines(sym, interval, limit){
+  var last;
+  for (var n = 0; n < HOSTS.length; n++) {
+    var h = HOSTS[(hostIdx + n) % HOSTS.length];
+    try {
+      var raw = await getJSON(h + "/api/v3/klines?symbol=" + sym + "USDT&interval=" + interval + "&limit=" + limit);
+      hostIdx = (hostIdx + n) % HOSTS.length; return PT.parseKlines(raw);
+    } catch (e) { last = e; }
+  }
+  throw new Error("Kursdaten nicht erreichbar (" + (last && last.message || "Netz") + ")");
+}
+
+/* ---------- KI-Agent ---------- */
+var AI_SCHEMA = { type: "object", additionalProperties: false,
+  required: ["action", "size_pct", "stop_pct", "take_pct", "confidence", "reason"],
+  properties: {
+    action: { type: "string", enum: ["buy", "sell", "hold"] },
+    size_pct: { type: "number", description: "Anteil (0-100) der durch die Risiko-Regeln erlaubten Maximalgröße" },
+    stop_pct: { type: "number", description: "Stop-Loss-Abstand unter Einstieg in Prozent" },
+    take_pct: { type: "number", description: "Gewinnziel über Einstieg in Prozent, 0 = keins" },
+    confidence: { type: "number", description: "0-1" },
+    reason: { type: "string", description: "Begründung auf Deutsch, höchstens 2 Sätze" }
+  } };
+var AI_SYSTEM = "Du bist ein disziplinierter Trading-Agent in einer Paper-Trading-Simulation (Spot, nur Long, Spielgeld). " +
+  "Du bekommst Kursdaten, Indikatoren und den Kontostand für einen Coin und entscheidest: buy (nur ohne offene Position), sell (nur mit offener Position) oder hold. " +
+  "Handle nur bei klarem Vorteil; im Zweifel hold. Gebühren und Schlupf kosten bei jedem Trade, Hin-und-her-Handeln verliert Geld. " +
+  "Die Simulation begrenzt Positionsgröße und Risiko unabhängig von deiner Antwort.";
+
+function aiSummary(sym, closed, price, pos){
+  var cl = closed.map(function(k){ return k.c; }), i = cl.length - 1;
+  var s20 = PT.sma(cl, 20)[i], s50 = PT.sma(cl, 50)[i], s200 = PT.sma(cl, 200)[i], r = PT.rsi(cl, 14)[i];
+  var r4 = function(v){ return v == null ? null : +v.toPrecision(6); };
+  var eq = PT.equityOf(S.acc, S.prices);
+  return {
+    coin: sym + "/USDT", kerzen_intervall: S.cfg.interval, aktueller_kurs: r4(price),
+    indikatoren: { sma20: r4(s20), sma50: r4(s50), sma200: r4(s200), rsi14: r == null ? null : +r.toFixed(1),
+      veraenderung_20_kerzen_pct: +((cl[i] / cl[Math.max(0, i - 20)] - 1) * 100).toFixed(2),
+      veraenderung_100_kerzen_pct: +((cl[i] / cl[Math.max(0, i - 100)] - 1) * 100).toFixed(2) },
+    letzte_40_kerzen_ohlc: closed.slice(-40).map(function(k){ return [r4(k.o), r4(k.h), r4(k.l), r4(k.c)]; }),
+    position: pos ? { einstieg: r4(pos.entry), gv_pct: +((price / pos.entry - 1) * 100).toFixed(2), stop: r4(pos.stop), ziel: r4(pos.take),
+      offen_seit_kerzen: Math.round((Date.now() - pos.t) / MS[S.cfg.interval]) } : null,
+    konto: { wert_usdt: Math.round(eq), bargeld_usdt: Math.round(S.acc.cash), offene_positionen: Object.keys(S.acc.pos).length },
+    regeln: { standard_stop_pct: +S.cfg.stopPct, standard_ziel_pct: +S.cfg.takePct, gebuehr_pct: +S.cfg.feePct },
+    letzte_trades_dieses_coins: S.acc.trades.filter(function(t){ return t.sym === sym; }).slice(-4)
+      .map(function(t){ return { art: t.side, preis: r4(t.price), gv_pct: t.pnlPct == null ? null : +t.pnlPct.toFixed(2), grund: t.reason }; })
+  };
+}
+async function aiDecide(sym, closed, price, pos){
+  var c = S.cfg;
+  if (!c.aiKey) return { action: "hold", reason: "Kein API-Key eingetragen" };
+  if (S.ai.day !== today()) { S.ai.day = today(); S.ai.calls = 0; S.ai.cost = 0; }
+  if (S.ai.calls >= +c.aiMax) return { action: "hold", reason: "Tageslimit an KI-Anfragen erreicht" };
+  S.ai.calls++;
+  var headers = { "content-type": "application/json", "x-api-key": c.aiKey, "anthropic-version": "2026-10-21",
+    "anthropic-dangerous-direct-browser-access": "true" };
+  var body = { model: c.aiModel, max_tokens: 8000, system: AI_SYSTEM,
+    output_config: { effort: c.aiEffort, format: { type: "json_schema", schema: AI_SCHEMA } },
+    messages: [{ role: "user", content: JSON.stringify(aiSummary(sym, closed, price, pos)) }] };
+  if (c.aiModel !== "claude-haiku-5-5") { headers["anthropic-beta"] = "server-side-fallback-2026-07-01"; body.fallbacks = "default"; }
+  var r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: headers, body: JSON.stringify(body) });
+  var j = await r.json().catch(function(){ return {}; });
+  if (!r.ok) {
+    var m = j.error && j.error.message || ("HTTP " + r.status);
+    if (r.status === 401) m = "API-Key ungültig"; else if (r.status === 429) m = "Zu viele Anfragen / Guthaben-Limit";
+    throw new Error("KI: " + m);
+  }
+  var p = PRICES[c.aiModel] || [0, 0], u = j.usage || {};
+  var cost = ((u.input_tokens || 0) * p[0] + (u.output_tokens || 0) * p[1]) / 1e6;
+  S.ai.cost += cost; S.ai.totalCost += cost;
+  if (j.stop_reason === "refusal") return { action: "hold", reason: "KI hat die Anfrage abgelehnt" };
+  if (j.stop_reason === "max_tokens") return { action: "hold", reason: "KI-Antwort abgeschnitten" };
+  var txt = (j.content || []).filter(function(b){ return b.type === "text"; }).map(function(b){ return b.text; }).join("");
+  var d; try { d = JSON.parse(txt); } catch (e) { return { action: "hold", reason: "KI-Antwort nicht lesbar" }; }
+  var clamp = function(v, lo, hi, fb){ v = +v; return isFinite(v) ? Math.min(hi, Math.max(lo, v)) : fb; };
+  var out = { action: ["buy", "sell", "hold"].indexOf(d.action) >= 0 ? d.action : "hold",
+    sizePct: clamp(d.size_pct, 0, 100, 100), stopPct: clamp(d.stop_pct, 0.5, 15, +c.stopPct),
+    takePct: clamp(d.take_pct, 0, 50, +c.takePct), confidence: clamp(d.confidence, 0, 1, 0), reason: String(d.reason || "").slice(0, 300) };
+  S.ai.last = { t: Date.now(), sym: sym, d: out, cost: cost };
+  return out;
+}
+
+/* ---------- Bot-Schleife ---------- */
+var timer = null, busy = false, nextAt = 0, lastErr = "";
+async function step(){
+  if (busy) return; busy = true;
+  var c = S.cfg, o = opts(), errs = [];
+  for (var n = 0; n < c.syms.length; n++) {
+    var sym = c.syms[n];
+    try {
+      var ks = await klines(sym, c.interval, 300), now = Date.now();
+      var price = ks[ks.length - 1].c, closed = ks.filter(function(k){ return k.ct < now; });
+      S.prices[sym] = price;
+      // 1) Stop-Loss / Gewinnziel gegen den aktuellen Kurs
+      var ex = PT.checkExits(S.acc, sym, { t: now, o: price, h: price, l: price, c: price }, o);
+      if (ex) log(sym + ": " + ex.reason + " verkauft zu " + px(ex.price) + " (" + pct(ex.pnlPct) + ")");
+      // 2) Strategie nur einmal pro neu geschlossener Kerze
+      var lastT = closed.length ? closed[closed.length - 1].t : null, key = sym + "|" + c.interval + "|" + c.strat;
+      if (lastT == null || S.seen[key] === lastT) continue;
+      S.seen[key] = lastT;
+      var pos = S.acc.pos[sym], sig;
+      if (c.strat === "ai") sig = await aiDecide(sym, closed, price, pos);
+      else sig = PT.STRATEGIES[c.strat].fn(closed.slice(-260), !!pos);
+      if (sig.action === "buy" && !pos) {
+        var bo = Object.assign({}, o);
+        if (sig.stopPct != null) { bo.stopPct = sig.stopPct; bo.takePct = sig.takePct; bo.sizePct = sig.sizePct; }
+        var b = PT.buy(S.acc, sym, price, now, bo, sig.reason, S.prices);
+        log(b ? sym + ": KAUF " + usd(b.qty * b.price, 0) + " zu " + px(b.price) + " – " + sig.reason : sym + ": Kaufsignal, aber zu wenig Bargeld");
+      } else if (sig.action === "sell" && pos) {
+        var s = PT.sell(S.acc, sym, price, now, o, sig.reason);
+        log(sym + ": VERKAUF zu " + px(s.price) + " (" + pct(s.pnlPct) + ") – " + sig.reason);
+      } else if (c.strat === "ai") log(sym + ": KI hält – " + sig.reason);
+    } catch (e) { errs.push(sym + ": " + e.message); }
+  }
+  var eq = PT.equityOf(S.acc, S.prices), pts = S.acc.equity;
+  pts.push({ t: Date.now(), v: eq });
+  if (pts.length > 1500) S.acc.equity = pts.filter(function(_, i){ return i % 2 === 0 || i > pts.length - 200; });
+  var msg = errs.join(" · ");
+  if (msg && msg !== lastErr) log("Fehler – " + msg);
+  lastErr = msg; S.lastRun = Date.now();
+  save(); busy = false; render();
+}
+function schedule(){
+  clearTimeout(timer); if (!S.running) return;
+  nextAt = Date.now() + S.cfg.poll * 1000;
+  timer = setTimeout(async function(){ await step(); schedule(); }, S.cfg.poll * 1000);
+}
+async function start(){
+  if (!S.cfg.syms.length) { alert("Bitte mindestens einen Coin auswählen."); return; }
+  if (S.cfg.strat === "ai" && !S.cfg.aiKey) { alert("Für den KI-Agenten bitte zuerst einen API-Key eintragen."); return; }
+  S.running = true; log("Bot gestartet: " + stratName(S.cfg.strat) + ", " + S.cfg.syms.join(", ") + ", Kerzen " + S.cfg.interval);
+  save(); render(); wake(); await step(); schedule();
+}
+function stop(){ S.running = false; clearTimeout(timer); log("Bot gestoppt."); save(); render(); wake(); }
+function stratName(k){ return k === "ai" ? "KI-Agent (" + S.cfg.aiModel.replace("claude-", "") + ")" : PT.STRATEGIES[k].name; }
+
+/* Bildschirm anlassen, damit das Tablet die Seite nicht schlafen legt */
+var lock = null;
+async function wake(){
+  try {
+    if (S.running && S.cfg.wake && "wakeLock" in navigator && document.visibilityState === "visible") { if (!lock) { lock = await navigator.wakeLock.request("screen"); lock.addEventListener("release", function(){ lock = null; }); } }
+    else if (lock) { await lock.release(); lock = null; }
+  } catch (e) {}
+}
+document.addEventListener("visibilitychange", function(){
+  if (document.visibilityState === "visible" && S.running) { wake(); step().then(schedule); }
+});
+
+/* ---------- Diagramm ---------- */
+function draw(cv, series){
+  var dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w * dpr; cv.height = h * dpr;
+  var g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  var cs = getComputedStyle(document.documentElement), all = [];
+  series.forEach(function(s){ s.pts.forEach(function(p){ all.push(p); }); });
+  if (all.length < 2) { g.fillStyle = cs.getPropertyValue("--muted"); g.font = "13px sans-serif"; g.fillText("Noch zu wenig Daten für ein Diagramm.", 8, h / 2); return; }
+  var t0 = Math.min.apply(null, all.map(function(p){ return p.t; })), t1 = Math.max.apply(null, all.map(function(p){ return p.t; }));
+  var v0 = Math.min.apply(null, all.map(function(p){ return p.v; })), v1 = Math.max.apply(null, all.map(function(p){ return p.v; }));
+  if (v1 - v0 < 1e-9) { v0 -= 1; v1 += 1; } var pad = (v1 - v0) * 0.08; v0 -= pad; v1 += pad;
+  var L = 64, R = 8, T = 8, B = 20, X = function(t){ return L + (t - t0) / Math.max(1, t1 - t0) * (w - L - R); }, Y = function(v){ return T + (1 - (v - v0) / (v1 - v0)) * (h - T - B); };
+  g.strokeStyle = cs.getPropertyValue("--line"); g.fillStyle = cs.getPropertyValue("--muted"); g.font = "11px sans-serif"; g.lineWidth = 1;
+  for (var i = 0; i <= 3; i++) { var v = v0 + (v1 - v0) * i / 3, y = Y(v); g.beginPath(); g.moveTo(L, y); g.lineTo(w - R, y); g.stroke(); g.fillText(Math.round(v).toLocaleString("de-DE"), 4, y + 4); }
+  g.fillText(ts(t0), L, h - 4); var e = ts(t1); g.fillText(e, w - R - g.measureText(e).width, h - 4);
+  series.forEach(function(s){
+    g.strokeStyle = cs.getPropertyValue(s.color); g.lineWidth = s.width || 2; g.beginPath();
+    s.pts.forEach(function(p, i){ i ? g.lineTo(X(p.t), Y(p.v)) : g.moveTo(X(p.t), Y(p.v)); }); g.stroke();
+  });
+}
+
+/* ---------- Anzeige ---------- */
+function render(){
+  var a = S.acc, eq = PT.equityOf(a, S.prices), pnl = eq - a.start;
+  $("kEq").textContent = usd(eq);
+  $("kPnl").textContent = usd(pnl); $("kPnl").className = "v " + cls(pnl);
+  $("kPnlPct").textContent = pct(pnl / a.start * 100); $("kPnlPct").className = "s " + cls(pnl);
+  $("kCash").textContent = usd(a.cash);
+  var sells = a.trades.filter(function(t){ return t.side === "SELL"; }), wins = sells.filter(function(t){ return t.pnl > 0; }).length;
+  $("kTr").textContent = sells.length + " · " + (sells.length ? Math.round(wins / sells.length * 100) + " %" : "–");
+  $("accSince").textContent = "seit " + new Date(S.created).toLocaleDateString("de-DE") + " · Start " + usd(a.start, 0);
+  draw($("eqChart"), [{ pts: a.equity, color: "--accent" }]);
+
+  var pb = $("posBody"); pb.textContent = ""; var syms = Object.keys(a.pos);
+  syms.forEach(function(s){
+    var p = a.pos[s], cur = S.prices[s] != null ? S.prices[s] : p.entry, val = p.qty * cur, g = val - p.cost, tr = el("tr");
+    [s, px(p.entry), px(cur), usd(val, 0)].forEach(function(x){ tr.appendChild(el("td", "", x)); });
+    tr.appendChild(el("td", cls(g), pct(g / p.cost * 100)));
+    tr.appendChild(el("td", "", px(p.stop))); tr.appendChild(el("td", "", p.take ? px(p.take) : "–"));
+    var td = el("td"), b = el("button", "small", "Schließen");
+    b.addEventListener("click", function(){
+      if (!confirm(s + "-Position jetzt zum letzten Kurs verkaufen?")) return;
+      var x = PT.sell(S.acc, s, cur, Date.now(), opts(), "Von Hand geschlossen");
+      log(s + ": von Hand verkauft (" + pct(x.pnlPct) + ")"); save(); render();
+    });
+    td.appendChild(b); tr.appendChild(td); pb.appendChild(tr);
+  });
+  $("posEmpty").hidden = syms.length > 0; $("posCount").textContent = syms.length ? syms.length + " offen" : "";
+
+  var tb = $("trBody"); tb.textContent = ""; var list = a.trades.slice(-50).reverse();
+  list.forEach(function(t){
+    var tr = el("tr");
+    [ts(t.t), t.sym, t.side === "BUY" ? "Kauf" : "Verkauf", px(t.price)].forEach(function(x){ tr.appendChild(el("td", "", x)); });
+    tr.appendChild(el("td", cls(t.pnl), t.pnl == null ? "" : usd(t.pnl)));
+    tr.appendChild(el("td", "why", t.reason)); tb.appendChild(tr);
+  });
+  $("trEmpty").hidden = list.length > 0; $("trCount").textContent = a.trades.length ? a.trades.length + " gesamt" : "";
+
+  $("status").className = "pill" + (S.running ? (lastErr ? " err" : " on") : "");
+  $("statusText").textContent = S.running ? (lastErr ? "läuft · Fehler" : "läuft") : "gestoppt";
+  var tg = $("toggle"); tg.textContent = S.running ? "■ Bot stoppen" : "▶ Bot starten"; tg.className = "big " + (S.running ? "stop" : "primary");
+  $("lastRun").innerHTML = ""; var lr = $("lastRun");
+  if (S.lastRun) { lr.append("Zuletzt geprüft: "); lr.appendChild(el("b", "", ts(S.lastRun))); lr.append(" · " + stratName(S.cfg.strat)); }
+  else lr.textContent = "Noch nicht gelaufen.";
+  $("runErr").textContent = lastErr;
+
+  $("aiCard").hidden = S.cfg.strat !== "ai";
+  var ai = S.ai, isToday = ai.day === today();
+  $("aiUsage").textContent = (isToday ? ai.calls : 0) + "/" + S.cfg.aiMax + " heute · ca. " + (isToday ? ai.cost : 0).toFixed(2) + " $ (gesamt " + ai.totalCost.toFixed(2) + " $)";
+  var box = $("aiLast");
+  if (ai.last) {
+    box.hidden = false; box.textContent = "";
+    var d = ai.last.d, act = { buy: "KAUFEN", sell: "VERKAUFEN", hold: "HALTEN" }[d.action];
+    box.appendChild(el("b", "", "Letzte Entscheidung " + ai.last.sym + ": " + act + " (Sicherheit " + Math.round(d.confidence * 100) + " %)"));
+    box.appendChild(el("div", "", d.reason));
+    box.appendChild(el("div", "meta", ts(ai.last.t) + " · Stop " + num(d.stopPct) + " % · Ziel " + num(d.takePct) + " % · Größe " + Math.round(d.sizePct) + " % · " + num(ai.last.cost, 4) + " $"));
+  } else box.hidden = true;
+}
+function renderLog(){
+  var l = $("log"); l.textContent = "";
+  if (!S.log.length) { l.appendChild(el("div", "empty", "Noch keine Einträge.")); return; }
+  S.log.slice(0, 100).forEach(function(e){ var d = el("div"); d.appendChild(el("time", "", ts(e.t))); d.append(e.m); l.appendChild(d); });
+}
+setInterval(function(){ $("nextRun").textContent = S.running && nextAt ? "nächste Prüfung in " + Math.max(0, Math.round((nextAt - Date.now()) / 1000)) + " s" : ""; }, 1000);
+
+/* ---------- Einstellungen ---------- */
+function fillForm(){
+  var c = S.cfg, st = $("strat"), bs = $("btStrat"), sy = $("syms"), bsym = $("btSym");
+  st.textContent = ""; bs.textContent = "";
+  Object.keys(PT.STRATEGIES).forEach(function(k){ st.appendChild(new Option(PT.STRATEGIES[k].name, k)); bs.appendChild(new Option(PT.STRATEGIES[k].name, k)); });
+  st.appendChild(new Option("KI-Agent (Claude entscheidet)", "ai"));
+  st.value = c.strat; bs.value = c.strat === "ai" ? "sma" : c.strat;
+  sy.textContent = ""; bsym.textContent = "";
+  SYMBOLS.forEach(function(s){
+    var lb = el("label"), cb = el("input"); cb.type = "checkbox"; cb.value = s; cb.checked = c.syms.indexOf(s) >= 0;
+    cb.addEventListener("change", function(){
+      c.syms = SYMBOLS.filter(function(x){ return sy.querySelector('input[value="' + x + '"]').checked; }); save();
+    });
+    lb.appendChild(cb); lb.append(s); sy.appendChild(lb); bsym.appendChild(new Option(s, s));
+  });
+  ["interval", "poll", "capital", "riskPct", "stopPct", "takePct", "maxPosPct", "feePct", "slipPct", "aiKey", "aiModel", "aiEffort", "aiMax"].forEach(function(id){ $(id).value = c[id]; });
+  $("wake").checked = c.wake;
+}
+["interval", "poll", "capital", "riskPct", "stopPct", "takePct", "maxPosPct", "feePct", "slipPct", "aiKey", "aiModel", "aiEffort", "aiMax"].forEach(function(id){
+  $(id).addEventListener("change", function(){
+    var v = $(id).value, num = $(id).type === "number" || id === "poll";
+    if (num) { v = parseFloat(String(v).replace(",", ".")); if (!isFinite(v)) { $(id).value = S.cfg[id]; return; } }
+    S.cfg[id] = id === "aiKey" ? v.trim() : v; save(); render();
+    if (id === "poll" && S.running) schedule();
+  });
+});
+$("strat").addEventListener("change", function(){
+  S.cfg.strat = this.value; if (this.value !== "ai") $("btStrat").value = this.value;
+  if (S.running) log("Strategie gewechselt: " + stratName(S.cfg.strat));
+  save(); render();
+});
+$("wake").addEventListener("change", function(){ S.cfg.wake = this.checked; save(); wake(); });
+$("toggle").addEventListener("click", function(){ S.running ? stop() : start(); });
+$("reset").addEventListener("click", function(){
+  if (!confirm("Konto auf " + usd(+S.cfg.capital, 0) + " zurücksetzen? Alle Positionen und Trades werden gelöscht.")) return;
+  S.acc = PT.newAccount(+S.cfg.capital); S.created = Date.now(); S.seen = {}; log("Konto zurückgesetzt auf " + usd(+S.cfg.capital, 0) + "."); save(); render();
+});
+$("csv").addEventListener("click", function(){
+  var rows = [["Zeit", "Coin", "Art", "Preis", "Menge", "Gebuehr", "GV_USDT", "GV_Prozent", "Grund"]];
+  S.acc.trades.forEach(function(t){ rows.push([new Date(t.t).toISOString(), t.sym, t.side, t.price, t.qty, t.fee.toFixed(4), t.pnl == null ? "" : t.pnl.toFixed(2), t.pnlPct == null ? "" : t.pnlPct.toFixed(2), t.reason]); });
+  var csv = rows.map(function(r){ return r.map(function(x){ x = String(x); return /[;"\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; }).join(";"); }).join("\n");
+  var a = el("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" })); a.download = "paper-trades.csv"; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+});
+
+/* ---------- Backtest ---------- */
+$("btRun").addEventListener("click", async function(){
+  var b = this, sym = $("btSym").value, st = $("btStrat").value; b.disabled = true; b.textContent = "Lädt Kurse …"; $("btErr").textContent = "";
+  try {
+    var ks = await klines(sym, S.cfg.interval, 1000), now = Date.now();
+    ks = ks.filter(function(k){ return k.ct < now; });
+    var r = PT.backtest(ks, st, opts(), 10000), s = r.stats;
+    $("btOut").hidden = false;
+    $("btRet").textContent = pct(s.returnPct); $("btRet").className = "v " + cls(s.returnPct);
+    $("btBh").textContent = pct(s.buyHoldPct); $("btBh").className = "v " + cls(s.buyHoldPct);
+    $("btDd").textContent = "−" + s.maxDDPct.toFixed(1).replace(".", ",") + " %";
+    $("btTr").textContent = s.trades + " · " + (s.trades ? Math.round(s.winRatePct) + " %" : "–");
+    draw($("btChart"), [{ pts: r.bh, color: "--muted", width: 1.5 }, { pts: r.curve, color: "--accent" }]);
+    var verdict = s.returnPct > s.buyHoldPct ? "Schlägt „nur halten“ in diesem Zeitraum." : "Schlechter als „nur halten“ in diesem Zeitraum.";
+    $("btMeta").textContent = sym + " · " + S.cfg.interval + " · " + ts(ks[0].t) + " bis " + ts(ks[ks.length - 1].t) + " · Gebühren " + usd(s.fees, 0) +
+      " · Profit-Faktor " + (isFinite(s.profitFactor) ? s.profitFactor.toFixed(2).replace(".", ",") : "∞") + " · Max. Rückgang „nur halten“ −" + s.buyHoldDDPct.toFixed(1).replace(".", ",") + " %. " + verdict;
+  } catch (e) { $("btErr").textContent = e.message; }
+  b.disabled = false; b.textContent = "Backtest starten";
+});
+
+/* ---------- Start ---------- */
+fillForm(); render(); renderLog();
+window.addEventListener("resize", function(){ render(); });
+if (S.running) { log("Seite neu geöffnet – Bot läuft weiter."); wake(); step().then(schedule); }
+</script>
+</body>
+</html>
